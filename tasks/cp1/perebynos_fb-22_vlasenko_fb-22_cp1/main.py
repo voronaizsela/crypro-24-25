@@ -1,4 +1,6 @@
 from typing import Callable
+import pandas as pd
+from math import log2
 
 # 1 << 16 = 64KB
 TEXT_BLOCK_SIZE = 1 << 16
@@ -11,8 +13,8 @@ class EntropyCalculator:
     monogramCount: dict[str, int]
     totalMonograms: int
 
-    notOverlappedBigramCount: dict[str, int]
-    totalNotOverlappedBigrams: int
+    distinctBigramCount: dict[str, int]
+    totalDisctinctBigrams: int
 
     overlappedBigramCount: dict[str, int]
     totalOverlappedBigrams: int
@@ -26,6 +28,23 @@ class EntropyCalculator:
 
     def handleText(self, text: str):
         pass
+
+    def monogramStatisticToExcel(self):
+        pass
+
+# Calculate frequency of each Ngram in text by dividing its occurences on total Ngram quantity.
+def calculateFrequency(NgramCount: dict[str, int], totalNgrams: int) -> dict[str, int]:
+    frequencies = {}
+    for ngram, count in NgramCount.items():
+        frequencies[ngram] = count / totalNgrams
+    return dict(sorted(frequencies.items(), key=lambda item: item[1]))
+
+
+def calculateEntropy(frequencies: dict[str, int]) -> int:
+    entropy = 0
+    for freq in frequencies.values():
+        entropy -= freq * log2(freq)
+    return entropy
 
 
 # Read text from file by blocks and process by handler.
