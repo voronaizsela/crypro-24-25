@@ -8,10 +8,12 @@ import argparse
 import pprint
 import os
 
+# Precision for Decimal.
 getcontext().prec = 50
 
 # 1 << 16 = 64KB
 TEXT_BLOCK_SIZE = 1 << 16
+NULL = "\x00"
 
 STANDARD_ALPHABET = {
     "А": "а", "Б": "б", "В": "в", "Г": "г", "Д": "д", "Е": "е", "Ж": "ж", "З": "з", "И": "и", "Й": "й", "К": "к",
@@ -25,8 +27,10 @@ STANDARD_ALPHABET_WHITESPACE = {
     "Ц": "ц", "Ч": "ч", "Ш": "ш", "Щ": "щ", "Ы": "ы", "Ь": "ь", "Э": "э", "Ю": "ю", "Я": "я", "\x00": " "
 }
 
-STATICTIC_OUTPUT_FILE = "statistic.xlsx"
-STATICTIC_OUTPUT_FILE_WHITESPACED = "statistic_whitespaced.xlsx"
+STATICTIC_OUTPUT_FILE = "statistics"
+STATICTIC_OUTPUT_FILE_WHITESPACED = "statistics_whitespaced"
+EXCEL_EXTENSION = ".xlsx"
+CSV_EXTENSION = ".csv"
 
 class EntropyCalculator:
     alphabet: set
@@ -55,7 +59,7 @@ class EntropyCalculator:
         # Init dictionaries
         self.monogramCount = {c: 0 for c in self.alphabet}
         self.overlappedBigramCount = {c1 + c2: 0 for c1 in self.alphabet for c2 in self.alphabet}
-        self.whitespace = alphabet["\x00"] if "\x00" in alphabet else None
+        self.whitespace = alphabet[NULL] if NULL in alphabet else None
         if not self.whitespace is None:
             # There cannot be two whitespace bigram
             del self.overlappedBigramCount[self.whitespace*2]
@@ -160,7 +164,7 @@ class EntropyCalculator:
         return biDF
 
     # Create an Excel file with aggregated statistics.
-    def statisticsToExcel(self, fileName: str) -> None:
+    def statisticsToExcel(self, filename: str) -> None:
         # MONOGRAMS : Form columns monogram -> frequency.
         monoDF = self.formMonogramDF()
 
@@ -170,11 +174,16 @@ class EntropyCalculator:
         # DISTINCT BIGRAMS : Form matrix for distinct bigrams -> frequencies.
         dBiDF = self.formBigramDF(overlapped=False)
 
-        # CONVERSION TO EXCEL
-        with pd.ExcelWriter(fileName) as writer:
+        # CONVERSION TO EXCEL.
+        with pd.ExcelWriter(filename + EXCEL_EXTENSION) as writer:
             monoDF.to_excel(writer, sheet_name="Monogram Statictic", index=False)
             oBiDF.to_excel(writer, sheet_name="Overlapped Bigram Statistic", index=False)
             dBiDF.to_excel(writer, sheet_name="Distinct Bigram Statistic", index=False)
+
+        # CONVERION TO CSV.
+        monoDF.to_csv(filename + CSV_EXTENSION, index=False)
+        oBiDF.to_csv(filename + CSV_EXTENSION, index=False)
+        dBiDF.to_csv(filename + CSV_EXTENSION, index=False)
 
 
 # Fill NxM matrix (2D list) with 0s.
