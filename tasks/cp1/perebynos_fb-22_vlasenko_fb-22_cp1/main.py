@@ -26,6 +26,7 @@ STANDARD_ALPHABET_WHITESPACE = {
 }
 
 STATICTIC_OUTPUT_FILE = "statistic.xlsx"
+STATICTIC_OUTPUT_FILE_WHITESPACED = "statistic_whitespaced.xlsx"
 
 class EntropyCalculator:
     alphabet: set
@@ -61,7 +62,8 @@ class EntropyCalculator:
 
         self.distinctBigramCount = self.overlappedBigramCount.copy()
 
-    def updateNgramDicts(self, currentSymbol: str):
+    # Update monogram count with currentSymbol and oreviousSymbol for bigrams
+    def updateNgramCounts(self, currentSymbol: str) -> None:
         self.monogramCount[currentSymbol] += 1
         self.totalMonograms += 1
         
@@ -76,7 +78,7 @@ class EntropyCalculator:
                 self.distinctBigramCount[self.previousSymbol + currentSymbol] += 1
                 self.totalDistinctBigrams += 1
 
-    def handleText(self, text: str):
+    def handleText(self, text: str) -> None:
         for c in text:
             # All characters not included in the alphabet are considered whitespace
             if c not in self.alphabet or (not self.whitespace is None and c == self.whitespace):
@@ -89,13 +91,13 @@ class EntropyCalculator:
                 if self.isWhitespace:
                     continue
                 
-                self.updateNgramDicts(self.whitespace)
+                self.updateNgramCounts(self.whitespace)
                 self.isWhitespace = True
                 self.previousSymbol = self.whitespace
                 continue
 
             self.isWhitespace = False
-            self.updateNgramDicts(c)
+            self.updateNgramCounts(c)
             self.previousSymbol = c
 
     # Create a DataFrame for monogram frequencies.
@@ -124,7 +126,7 @@ class EntropyCalculator:
         if overlapped:
             biFreq = calculateFrequency(self.overlappedBigramCount, self.totalOverlappedBigrams)
         else:
-            biFreq = calculateFrequency(self.distinctBigramCount, self.totalDisctinctBigrams)
+            biFreq = calculateFrequency(self.distinctBigramCount, self.totalDistinctBigrams)
 
         bigramCol: list[str] = []
         bigramRow: list[str] = []
@@ -133,6 +135,9 @@ class EntropyCalculator:
         for bigram in biFreq.keys():
             bigramRow.append(bigram[0])
             bigramCol.append(bigram[1])
+
+        bigramCol.sort()
+        bigramRow.sort()
 
         # Remove duplicates.
         bigramCol = removeDuplicates(bigramCol)
@@ -145,17 +150,17 @@ class EntropyCalculator:
         for bigram, freq in biFreq.items():
             col = bigramRow.index(bigram[1])
             row = bigramCol.index(bigram[0])
-            freqMatrix[col][row] = freq
+            freqMatrix[col][row] = f"{(freq * Decimal(100)):.3f}"
 
         # Add row headers (column) to the sheet and the correspondig frequencies along with a column header.
-        biDF.insert(0, "Bigram Letters", bigramCol, allow_duplicates=True)
+        biDF.insert(0, "Bigram Letters (scale x100)", bigramCol, allow_duplicates=True)
         for i in range(len(bigramRow)):
             biDF.insert(i + 1, bigramRow[i], freqMatrix[i], allow_duplicates=True)
 
         return biDF
 
     # Create an Excel file with aggregated statistics.
-    def statisticsToExcel(self) -> None:
+    def statisticsToExcel(self, fileName: str) -> None:
         # MONOGRAMS : Form columns monogram -> frequency.
         monoDF = self.formMonogramDF()
 
@@ -166,19 +171,19 @@ class EntropyCalculator:
         dBiDF = self.formBigramDF(overlapped=False)
 
         # CONVERSION TO EXCEL
-        with pd.ExcelWriter(STATICTIC_OUTPUT_FILE) as writer:
+        with pd.ExcelWriter(fileName) as writer:
             monoDF.to_excel(writer, sheet_name="Monogram Statictic", index=False)
             oBiDF.to_excel(writer, sheet_name="Overlapped Bigram Statistic", index=False)
             dBiDF.to_excel(writer, sheet_name="Distinct Bigram Statistic", index=False)
 
 
 # Fill NxM matrix (2D list) with 0s.
-def fillEmpty(columns: int, rows: int) -> list[list[Decimal]]:
-    matrix: list[list[Decimal]] = []
+def fillEmpty(columns: int, rows: int) -> list[list[str]]:
+    matrix: list[list[str]] = []
     for i in range(columns):
         matrix.append([])
         for _ in range(rows):
-            matrix[i].append(Decimal(0))
+            matrix[i].append("0")
     return matrix
 
 
@@ -190,14 +195,15 @@ def removeDuplicates(lst: list) -> list:
 # Calculate frequency of each Ngram in text by dividing its occurences on total Ngram quantity.
 def calculateFrequency(ngramCount: dict[str, int], totalNgrams: int) -> dict[str, Decimal]:
     # Since log(0) is undefined, we add one to the amount of each ngram
-    freqs = {ngram: Decimal(count + 1) / Decimal(totalNgrams + len(ngramCount)) for ngram, count in ngramCount.items()}
+    freqs = {ngram: Decimal(count) / Decimal(totalNgrams) for ngram, count in ngramCount.items()}
     return dict(sorted(freqs.items(), key=lambda item: item[1], reverse=True))
 
 
 def calculateEntropy(frequencies: dict[str, Decimal]) -> Decimal:
     entropy = Decimal(0)
     for freq in frequencies.values():
-        entropy -= freq * Decimal(log2(freq))
+        if not freq.is_zero():
+            entropy -= freq * Decimal(log2(freq))
     return entropy / Decimal(len(list(frequencies.keys())[0]))
 
 
@@ -277,6 +283,9 @@ def main():
     entropy = calculateEntropy(freqs)
     print("Specific entropy on monogram character (not overlapped) (with spaces):", entropy)
     print("Source redundancy monogram character (not overlapped) (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
+
+    generalCalc.statisticsToExcel(STATICTIC_OUTPUT_FILE)
+    whitespacedCalc.statisticsToExcel(STATICTIC_OUTPUT_FILE_WHITESPACED)
 
 
 if __name__ == "__main__":
