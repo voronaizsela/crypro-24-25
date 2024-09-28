@@ -25,7 +25,7 @@ STANDARD_ALPHABET_WHITESPACE = {
     "Ц": "ц", "Ч": "ч", "Ш": "ш", "Щ": "щ", "Ы": "ы", "Ь": "ь", "Э": "э", "Ю": "ю", "Я": "я", "\x00": " "
 }
 
-STATICTIC_OUTPUT_FILE = "mono.xlsx"
+STATICTIC_OUTPUT_FILE = "statistic.xlsx"
 
 class EntropyCalculator:
     alphabet: set
@@ -104,7 +104,7 @@ class EntropyCalculator:
         monoFreq = calculateFrequency(self.monogramCount, self.totalMonograms)
 
         monogramCol: list[str] = []
-        freqCol: list[int] = []
+        freqCol: list[Decimal] = []
 
         # Split frequencies dictionary into two columns (monograms with corresponding frequencies by index).
         for monogram, freq in monoFreq.items():
@@ -120,7 +120,7 @@ class EntropyCalculator:
         biDF = pd.DataFrame()
 
         # Calculate frequencies depending on whether the bigrams can ovelap.
-        biFreq: dict[str, int] = {}
+        biFreq: dict[str, Decimal] = {}
         if overlapped:
             biFreq = calculateFrequency(self.overlappedBigramCount, self.totalOverlappedBigrams)
         else:
@@ -173,12 +173,12 @@ class EntropyCalculator:
 
 
 # Fill NxM matrix (2D list) with 0s.
-def fillEmpty(columns: int, rows: int) -> list[list[int]]:
-    matrix: list[list[int]] = []
+def fillEmpty(columns: int, rows: int) -> list[list[Decimal]]:
+    matrix: list[list[Decimal]] = []
     for i in range(columns):
         matrix.append([])
         for _ in range(rows):
-            matrix[i].append(0)
+            matrix[i].append(Decimal(0))
     return matrix
 
 
