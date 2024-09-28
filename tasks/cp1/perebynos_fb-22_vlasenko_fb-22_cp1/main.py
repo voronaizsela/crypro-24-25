@@ -214,7 +214,7 @@ def sourceRedundancy(entropy: Decimal, symbolsCount: int) -> Decimal:
 # Read text from file by blocks and process by handler.
 # Handler should be object method.
 def readTextWithHandler(fileName: str, handler: Callable[[str], None]):
-    with open(fileName, "r") as f:
+    with open(fileName, "r", encoding="utf-8") as f:
         textBlock = f.read(TEXT_BLOCK_SIZE)
         handler(textBlock)
 
