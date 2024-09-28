@@ -190,7 +190,8 @@ def removeDuplicates(lst: list) -> list:
 # Calculate frequency of each Ngram in text by dividing its occurences on total Ngram quantity.
 def calculateFrequency(ngramCount: dict[str, int], totalNgrams: int) -> dict[str, Decimal]:
     # Since log(0) is undefined, we add one to the amount of each ngram
-    return {ngram: Decimal(count + 1) / Decimal(totalNgrams + len(ngramCount)) for ngram, count in ngramCount.items()}
+    freqs = {ngram: Decimal(count + 1) / Decimal(totalNgrams + len(ngramCount)) for ngram, count in ngramCount.items()}
+    return dict(sorted(freqs.items(), key=lambda item: item[1], reverse=True))
 
 
 def calculateEntropy(frequencies: dict[str, Decimal]) -> Decimal:
@@ -238,7 +239,7 @@ def main():
     print("Specific entropy on monogram (without spaces):", entropy)
     print("Source redundancy monogram (without spaces):", sourceRedundancy(entropy, len(generalCalc.alphabet)))
     print("Monogram (without spaces) frequencys:")
-    pprint.pp(sorted(freqs.items(), key=lambda item: item[1], reverse=True))
+    pprint.pp(freqs)
 
     print()
 
@@ -261,7 +262,7 @@ def main():
     print("Specific entropy on monogram character (with spaces):", entropy)
     print("Source redundancy monogram character (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
     print("Monogram (with spaces) frequencys:")
-    pprint.pp(sorted(freqs.items(), key=lambda item: item[1], reverse=True))
+    pprint.pp(freqs)
 
     print()
 
@@ -276,7 +277,6 @@ def main():
     entropy = calculateEntropy(freqs)
     print("Specific entropy on monogram character (not overlapped) (with spaces):", entropy)
     print("Source redundancy monogram character (not overlapped) (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
-
 
 
 if __name__ == "__main__":
