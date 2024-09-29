@@ -157,9 +157,9 @@ class EntropyCalculator:
             freqMatrix[col][row] = f"{(freq * Decimal(100)):.3f}"
 
         # Add row headers (column) to the sheet and the correspondig frequencies along with a column header.
-        biDF.insert(0, "Bigram Letters (scale x100)", bigramCol, allow_duplicates=True)
+        biDF.insert(0, "Bigram Letters (scale x100)", bigramRow, allow_duplicates=True)
         for i in range(len(bigramRow)):
-            biDF.insert(i + 1, bigramRow[i], freqMatrix[i], allow_duplicates=True)
+            biDF.insert(i + 1, bigramCol[i], freqMatrix[i], allow_duplicates=True)
 
         return biDF
 
