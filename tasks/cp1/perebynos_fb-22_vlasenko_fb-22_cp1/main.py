@@ -11,7 +11,7 @@ import os
 # Precision for Decimal.
 getcontext().prec = 50
 
-# 1 << 16 = 64KB
+# 1 << 16 = 64KB.
 TEXT_BLOCK_SIZE = 1 << 16
 NULL = "\x00"
 
@@ -49,49 +49,48 @@ class EntropyCalculator:
     isWhitespace: bool = False
     previousSymbol: str | None = None
 
-    # Alphabet is dictionary uppercase -> lowercase
-    # \x00 in uppercase mean that character which not included in alphabet
-    # can be interpreted as \x00 lowercase. Sequences of \x00 counts as 1 symbol
+    # Alphabet is a dictionary uppercase -> lowercase.
+    # \x00 in uppercase means a character that is not included in the alphabet and
+    # can be interpreted as \x00 lowercase. Sequences of \x00 counts as a single symbol.
     def __init__(self, alphabet: dict[str, str]):
         self.alphabet = set(alphabet.values())
         self.up2low = alphabet
 
-        # Init dictionaries
+        # Initialize dictionaries.
         self.monogramCount = {c: 0 for c in self.alphabet}
         self.overlappedBigramCount = {c1 + c2: 0 for c1 in self.alphabet for c2 in self.alphabet}
         self.whitespace = alphabet[NULL] if NULL in alphabet else None
         if not self.whitespace is None:
-            # There cannot be two whitespace bigram
+            # Remove double whitespace bigram.
             del self.overlappedBigramCount[self.whitespace*2]
 
         self.distinctBigramCount = self.overlappedBigramCount.copy()
 
-    # Update monogram count with currentSymbol and oreviousSymbol for bigrams
+    # Update monogram count with currentSymbol and previousSymbol for bigrams.
     def updateNgramCounts(self, currentSymbol: str) -> None:
         self.monogramCount[currentSymbol] += 1
         self.totalMonograms += 1
         
         # previousSymbol absent for the first letter
         if not self.previousSymbol is None:
-            # Total overlapped bigrams count is one less than monograms count
+            # Total overlapped bigrams count is one less than monograms count.
             self.overlappedBigramCount[self.previousSymbol + currentSymbol] += 1
             self.totalOverlappedBigrams += 1
 
-            # Total distinct bigrams count is half monograms count
+            # Total distinct bigrams count is half of monograms count.
             if self.totalMonograms % 2 == 0:
                 self.distinctBigramCount[self.previousSymbol + currentSymbol] += 1
                 self.totalDistinctBigrams += 1
 
     def handleText(self, text: str) -> None:
         for c in text:
-            # All characters not included in the alphabet are considered whitespace
+            # All characters that are not included in the alphabet are considered whitespaces.
             if c not in self.alphabet or (not self.whitespace is None and c == self.whitespace):
-                # If whitespace not provided in alphabet just skip it.
+                # If whitespace is not provided in alphabet -- skip it.
                 if self.whitespace is None:
                     continue
 
-                # We need to skip, when two or more whitespaces in row,
-                # since there can be only one whitespace
+                # There can be only one whitespace, so we skip 2 or more spaces in a row.
                 if self.isWhitespace:
                     continue
                 
@@ -203,7 +202,7 @@ def removeDuplicates(lst: list) -> list:
 
 # Calculate frequency of each Ngram in text by dividing its occurences on total Ngram quantity.
 def calculateFrequency(ngramCount: dict[str, int], totalNgrams: int) -> dict[str, Decimal]:
-    # Since log(0) is undefined, we add one to the amount of each ngram
+    # Since log(0) is undefined, add one to the amount of each ngrams.
     freqs = {ngram: Decimal(count) / Decimal(totalNgrams) for ngram, count in ngramCount.items()}
     return dict(sorted(freqs.items(), key=lambda item: item[1], reverse=True))
 
@@ -221,7 +220,7 @@ def sourceRedundancy(entropy: Decimal, symbolsCount: int) -> Decimal:
 
 
 # Read text from file by blocks and process by handler.
-# Handler should be object method.
+# Handler should be an object method.
 def readTextWithHandler(fileName: str, handler: Callable[[str], None]):
     with open(fileName, "r", encoding="utf-8") as f:
         textBlock = f.read(TEXT_BLOCK_SIZE)
@@ -251,47 +250,47 @@ def main():
 
     freqs = calculateFrequency(generalCalc.monogramCount, generalCalc.totalMonograms)
     entropy = calculateEntropy(freqs)
-    print("Specific entropy on monogram (without spaces):", entropy)
-    print("Source redundancy monogram (without spaces):", sourceRedundancy(entropy, len(generalCalc.alphabet)))
-    print("Monogram (without spaces) frequencys:")
+    print("Specific entropy on monograms (without spaces):", entropy)
+    print("Source redundancy on monograms (without spaces):", sourceRedundancy(entropy, len(generalCalc.alphabet)))
+    print("Monogram (without spaces) frequencies:")
     pprint.pp(freqs)
 
     print()
 
     freqs = calculateFrequency(generalCalc.overlappedBigramCount, generalCalc.totalOverlappedBigrams)
     entropy = calculateEntropy(freqs)
-    print("Specific entropy on bigram (overlapped) (without spaces):", entropy)
-    print("Source redundancy bigram (overlapped) (without spaces):", sourceRedundancy(entropy, len(generalCalc.alphabet)))
+    print("Specific entropy on bigrams (overlapped) (without spaces):", entropy)
+    print("Source redundancy on bigrams (overlapped) (without spaces):", sourceRedundancy(entropy, len(generalCalc.alphabet)))
 
     print()
 
     freqs = calculateFrequency(generalCalc.distinctBigramCount, generalCalc.totalDistinctBigrams)
     entropy = calculateEntropy(freqs)
-    print("Specific entropy on bigram (not overlapped) (without spaces):", entropy)
-    print("Source redundancy bigram (not overlapped) (without spaces):", sourceRedundancy(entropy, len(generalCalc.alphabet)))
+    print("Specific entropy on bigrams (not overlapped/distinct) (without spaces):", entropy)
+    print("Source redundancy on bigrams (not overlapped/distinct) (without spaces):", sourceRedundancy(entropy, len(generalCalc.alphabet)))
 
     print()
 
     freqs = calculateFrequency(whitespacedCalc.monogramCount, whitespacedCalc.totalMonograms)
     entropy = calculateEntropy(freqs)
-    print("Specific entropy on monogram character (with spaces):", entropy)
-    print("Source redundancy monogram character (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
-    print("Monogram (with spaces) frequencys:")
+    print("Specific entropy on monogram characters (with spaces):", entropy)
+    print("Source redundancy on monogram characters (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
+    print("Monogram (with spaces) frequencies:")
     pprint.pp(freqs)
 
     print()
 
     freqs = calculateFrequency(whitespacedCalc.overlappedBigramCount, whitespacedCalc.totalOverlappedBigrams)
     entropy = calculateEntropy(freqs)
-    print("Specific entropy on monogram character (overlapped) (with spaces):", entropy)
-    print("Source redundancy monogram character (overlapped) (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
+    print("Specific entropy on monogram characters (overlapped) (with spaces):", entropy)
+    print("Source redundancy on monogram characters (overlapped) (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
 
     print()
 
     freqs = calculateFrequency(whitespacedCalc.distinctBigramCount, whitespacedCalc.totalDistinctBigrams)
     entropy = calculateEntropy(freqs)
-    print("Specific entropy on monogram character (not overlapped) (with spaces):", entropy)
-    print("Source redundancy monogram character (not overlapped) (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
+    print("Specific entropy on monogram characters (not overlapped) (with spaces):", entropy)
+    print("Source redundancy on monogram characters (not overlapped) (with spaces):", sourceRedundancy(entropy, len(whitespacedCalc.alphabet)))
 
     generalCalc.statisticsToExcel(STATICTIC_OUTPUT_FILE)
     whitespacedCalc.statisticsToExcel(STATICTIC_OUTPUT_FILE_WHITESPACED)
