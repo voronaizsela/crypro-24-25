@@ -60,6 +60,36 @@ def calculate_bigram_frequencies(text_filtered, step):
 
     return bi_freq_percentage
 
+def print_bigram_matrix(bi_freq_percentage, with_space=False):
+    # Create an alphabet list for matrix indexing
+    alphabet = ALPHABET
+    if with_space:
+        alphabet = ALPHABET + ' '
+    alphabet = list(alphabet)
+    size = len(alphabet)
+    
+    # Create a matrix with zeros
+    matrix = [[0.0 for _ in range(size)] for _ in range(size)]
+
+    # Populate the matrix with bigram frequencies (multiplied by 100)
+    for bigram, freq in bi_freq_percentage.items():
+        if len(bigram) == 2:
+            row = alphabet.index(bigram[0])
+            col = alphabet.index(bigram[1])
+            matrix[row][col] = round(freq * 100, 3)  # Multiply by 100 and reduce to 3 decimal places
+
+    # Adjust column width for alignment
+    column_width = max(len(char) for char in alphabet) + 5  # Adjust the width of each column
+
+    # Print header row (alphabet letters)
+    header = " ".join(f"{char:>{column_width}}" for char in alphabet)
+    print(f"{'':>{column_width}} {header}")  # Add padding for the first column
+
+    # Print each row with corresponding bigram frequencies
+    for i, row in enumerate(matrix):
+        row_str = " ".join(f"{val:>{column_width}.3f}" for val in row)  # Format each number to 3 decimal places
+        print(f"{alphabet[i]:>{column_width}} {row_str}")
+
 def calculate_bigram_entropy(bi_freq_percentage):
     bi_entropy = 0
     for freq in bi_freq_percentage.values():
@@ -86,13 +116,13 @@ def main():
         R1_mono_redundancy = calculate_monogram_redundancy(H1_mono_entropy)
 
         # working with bigrams with step 1
-        bi_freq_percentage = calculate_bigram_frequencies(text_with_whitespaces_filtered, 1)
-        H2_bi_entropy_step1 = calculate_bigram_entropy(bi_freq_percentage)
+        bi_freq_percentage_step1 = calculate_bigram_frequencies(text_with_whitespaces_filtered, 1)
+        H2_bi_entropy_step1 = calculate_bigram_entropy(bi_freq_percentage_step1)
         R2_bi_redundancy_step1 = calculate_bigram_redundancy(H2_bi_entropy_step1)
 
         # working with bigrams with step 2
-        bi_freq_percentage = calculate_bigram_frequencies(text_with_whitespaces_filtered, 2)
-        H2_bi_entropy_step2 = calculate_bigram_entropy(bi_freq_percentage)
+        bi_freq_percentage_step2 = calculate_bigram_frequencies(text_with_whitespaces_filtered, 2)
+        H2_bi_entropy_step2 = calculate_bigram_entropy(bi_freq_percentage_step2)
         R2_bi_redundancy_step2 = calculate_bigram_redundancy(H2_bi_entropy_step2)
 
         # printing required info
@@ -105,18 +135,14 @@ def main():
 
         print(f"\nMonogram's entropy: {H1_mono_entropy}\n")
 
-        # Printing bigram frequencies line by line (step 1)
-        print("Bigram frequencies (step 1, with whitespaces):")
-        for bigram, frequency in bi_freq_percentage.items():
-            print(f"{bigram}: {frequency}")
+        print("\nSTEP ONE Bigram's matrix:")
+        print_bigram_matrix(bi_freq_percentage_step1, with_space=True)
 
         print(f"\nSTEP ONE Bigram's entropy: {H2_bi_entropy_step1}\n")
         print(f"STEP ONE Bigram's redundancy: {R2_bi_redundancy_step1}\n")
 
-        # Printing bigram frequencies line by line (step 2)
-        print("Bigram frequencies (step 2, with whitespaces):")
-        for bigram, frequency in bi_freq_percentage.items():
-            print(f"{bigram}: {frequency}")
+        print("\nSTEP TWO Bigram's matrix:")
+        print_bigram_matrix(bi_freq_percentage_step2, with_space=True)
 
         print(f"\nSTEP TWO Bigram's entropy: {H2_bi_entropy_step2}\n")
         print(f"STEP TWO Bigram's redundancy: {R2_bi_redundancy_step2}\n")
@@ -133,13 +159,13 @@ def main():
         R1_mono_redundancy = calculate_monogram_redundancy(H1_mono_entropy)
 
         # working with bigrams with step 1
-        bi_freq_percentage = calculate_bigram_frequencies(text_without_whitespaces_filtered, 1)
-        H2_bi_entropy_step1 = calculate_bigram_entropy(bi_freq_percentage)
+        bi_freq_percentage_step1 = calculate_bigram_frequencies(text_without_whitespaces_filtered, 1)
+        H2_bi_entropy_step1 = calculate_bigram_entropy(bi_freq_percentage_step1)
         R2_bi_redundancy_step1 = calculate_bigram_redundancy(H2_bi_entropy_step1)
 
         # working with bigrams with step 2
-        bi_freq_percentage = calculate_bigram_frequencies(text_without_whitespaces_filtered, 2)
-        H2_bi_entropy_step2 = calculate_bigram_entropy(bi_freq_percentage)
+        bi_freq_percentage_step2 = calculate_bigram_frequencies(text_without_whitespaces_filtered, 2)
+        H2_bi_entropy_step2 = calculate_bigram_entropy(bi_freq_percentage_step2)
         R2_bi_redundancy_step2 = calculate_bigram_redundancy(H2_bi_entropy_step2)
 
         # printing required info
@@ -152,18 +178,14 @@ def main():
 
         print(f"\nMonogram's entropy: {H1_mono_entropy}\n")
 
-        # Printing bigram frequencies line by line (step 1)
-        print("Bigram frequencies (step 1, without whitespaces):")
-        for bigram, frequency in bi_freq_percentage.items():
-            print(f"{bigram}: {frequency}")
+        print("\nSTEP ONE Bigram's matrix:")
+        print_bigram_matrix(bi_freq_percentage_step1)
 
         print(f"\nSTEP ONE Bigram's entropy: {H2_bi_entropy_step1}\n")
         print(f"STEP ONE Bigram's redundancy: {R2_bi_redundancy_step1}\n")
 
-        # Printing bigram frequencies line by line (step 2)
-        print("Bigram frequencies (step 2, without whitespaces):")
-        for bigram, frequency in bi_freq_percentage.items():
-            print(f"{bigram}: {frequency}")
+        print("\nSTEP TWO Bigram's matrix:")
+        print_bigram_matrix(bi_freq_percentage_step2)
 
         print(f"\nSTEP TWO Bigram's entropy: {H2_bi_entropy_step2}\n")
         print(f"STEP TWO Bigram's redundancy: {R2_bi_redundancy_step2}\n")
