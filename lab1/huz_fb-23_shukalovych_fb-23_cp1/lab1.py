@@ -12,7 +12,7 @@ def clean_text():
     with open('lab1.txt', 'r', encoding='utf-8') as file:
         content = file.read()
     content = content.lower()
-    cleaned = re.sub(r'[^а-я\s]+', '', content)
+    cleaned = re.sub(r'[^а-яё\s]+', '', content)
     cleaned = re.sub(r'\s+', ' ', cleaned)
     cleaned = cleaned.strip()
     return cleaned
@@ -23,7 +23,7 @@ def remove_spaces(text):
 
 #кількість літер без пробілів
 def count_letters_without_spaces(text):
-    letter_counts = Counter(re.findall(r'[а-я]', text))
+    letter_counts = Counter(re.findall(r'[а-яё]', text))
     return letter_counts
 
 #кількість літер з пробілами
