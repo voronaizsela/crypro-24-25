@@ -335,18 +335,18 @@ def main():
                          bigram_frequencies_no_overlap_no_spaces,
                          bigram_frequencies_no_overlap_with_spaces)
         elif choice == '5':
-            save_letter_counts_and_frequencies_to_csv('letter_counts_and_frequencies_without_spaces.csv',
+            save_letter_counts_and_frequencies_to_csv('data/letter_counts_and_frequencies_without_spaces.csv',
                                                       letter_counts_without_spaces, letter_frequencies_without_spaces)
-            save_letter_counts_and_frequencies_to_csv('letter_counts_and_frequencies_with_spaces.csv',
+            save_letter_counts_and_frequencies_to_csv('data/letter_counts_and_frequencies_with_spaces.csv',
                                                       letter_counts_with_spaces, letter_frequencies_with_spaces)
-            save_bigram_counts_and_frequencies_to_csv('bigram_counts_without_spaces.csv', bigram_counts_without_spaces,
+            save_bigram_counts_and_frequencies_to_csv('data/bigram_counts_without_spaces.csv', bigram_counts_without_spaces,
                                                       bigram_frequencies_without_spaces)
-            save_bigram_counts_and_frequencies_to_csv('bigram_counts_no_overlap_without_spaces.csv',
+            save_bigram_counts_and_frequencies_to_csv('data/bigram_counts_no_overlap_without_spaces.csv',
                                                       count_bigrams_no_overlap_no_spaces,
                                                       bigram_frequencies_no_overlap_no_spaces)
-            save_bigram_counts_and_frequencies_to_csv('bigram_counts_with_spaces.csv', bigram_counts_with_spaces,
+            save_bigram_counts_and_frequencies_to_csv('data/bigram_counts_with_spaces.csv', bigram_counts_with_spaces,
                                                       bigram_frequencies_with_spaces)
-            save_bigram_counts_and_frequencies_to_csv('bigram_counts_no_overlap_with_spaces.csv',
+            save_bigram_counts_and_frequencies_to_csv('data/bigram_counts_no_overlap_with_spaces.csv',
                                                       count_bigrams_no_overlap_with_spaces,
                                                       bigram_frequencies_no_overlap_with_spaces)
 
