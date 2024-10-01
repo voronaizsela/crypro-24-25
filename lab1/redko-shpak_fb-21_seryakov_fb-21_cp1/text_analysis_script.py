@@ -146,7 +146,7 @@ class TextAnalyzer:
                 if i < len(bigrams_by_letter[letter]):
                     bigram, freq = bigrams_by_letter[letter][i]
                     row.append(bigram)
-                    row.append(f"{freq:.6f}")
+                    row.append(freq)
                 else:
                     row.append("")
                     row.append("")
