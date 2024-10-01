@@ -134,6 +134,7 @@ def main():
             print(f"{monogram}: {frequency}")
 
         print(f"\nMonogram's entropy: {H1_mono_entropy}\n")
+        print(f"Monogram's redundancy: {R1_mono_redundancy}\n")
 
         print("\nSTEP ONE Bigram's matrix:")
         print_bigram_matrix(bi_freq_percentage_step1, with_space=True)
@@ -177,6 +178,7 @@ def main():
             print(f"{monogram}: {frequency}")
 
         print(f"\nMonogram's entropy: {H1_mono_entropy}\n")
+        print(f"Monogram's redundancy: {R1_mono_redundancy}\n")
 
         print("\nSTEP ONE Bigram's matrix:")
         print_bigram_matrix(bi_freq_percentage_step1)
