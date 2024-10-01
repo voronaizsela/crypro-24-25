@@ -1,6 +1,6 @@
 from math import log2
 from sys import argv
-import re
+#import re
 
 chk_alph = "абвгдеёжзийклмнопрстуфхцчшщьыъэюя"
 file_n = argv[1:][0]
@@ -27,43 +27,24 @@ def freq2csv(letters, f_name):
 
 # Підрахунок частот букв у тексті, де немає символів ".,!? "
 # 1. частоти букв
-def freq_symbols(gap):
+def freq_symbols(text):
     letters = dict()
-    text_size = 0
-    text = ""
-    
-    with open(file_n, "r", encoding="utf-8") as file:
-        char = " "
-        for s in file.read().lower():
-            if s in chk_alph or (gap and s == " " and char != " "):
-                text += s
-                char = s
-            elif s in "\n\t" and char != " ":
-                text += " "
-                char = " "
-        text = text[:-1] if text[-1] == " " else text
 
-        # if gap:
-        #     open("test.txt2", "w").write(text) 
-
-        for item in text:
-            if item not in letters.keys():
-                letters[item] = 1
-            else:
-                letters[item] += 1
-
-        text_size = len(text)
+    for item in text:
+        if item not in letters.keys():
+            letters[item] = 1
+        else:
+            letters[item] += 1
 
     for key, val in letters.items():
-        letters[key] = val / text_size
+        letters[key] = val / len(text)
     return letters
 
 #Підрахунок частот букв у тексті, де немає символів ".,!? "
 # 2. Перехресні біграми
 # 3. Не перехресні біграми
-def bigrams(gap, cross):
+def bigrams(text, gap, cross):
     bigrams = dict()
-    text = ""
 
     alph = chk_alph + ' ' if gap else chk_alph
 
@@ -71,42 +52,21 @@ def bigrams(gap, cross):
         for j in alph:
             bigrams[i + j] = 0
 
-    with open(file_n, "r", encoding="utf-8") as file:
-        # text = file.read()
-        # text = text.lower()
-        # text = re.sub(r'[^а-яё\s]+', '', text)
-        # text = re.sub(r'\s+', ' ', text)
-        # text = text if gap else text.replace(" ", "")
-        # text = text.strip()
+    for i in range(0, len(text) - 1, 1 if cross else 2):
+        item = text[i] + text[i + 1]
+        if item in bigrams.keys():
+            bigrams[item] += 1
 
-        char = " "
-        for s in file.read().lower():
-            if s in chk_alph or (gap and s == " " and char != " "):
-                text += s
-                char = s
-            elif s in "\n\t" and char != " ":
-                text += " "
-                char = " "
-        text = text[:-1] if text[-1] == " " else text
-
-        # if gap:
-        #     open("test.txt3", "w").write(text) 
-
-        for i in range(0, len(text) - 1, 1 if cross else 2):
-            item = text[i] + text[i + 1]
-            if item in bigrams.keys():
-                bigrams[item] += 1
-
-        bigrams_count = sum(bigrams.values())
-        # with open("gvedg.txt", "a") as l:
-        #     l.write(f"\nПропуски: {gap} <-+-> Перехресно: {cross}")
-        #     l.write(f"\nSum: {sum(bigrams.values())}\n")
-        #     l.write('\n')
-        #     for key, value in bigrams.items():
-        #         l.write(f'{key}: {value}\n')
-        #     l.write('-'*50)
-        for key, val in bigrams.items():
-            bigrams[key] = val / bigrams_count
+    bigrams_count = sum(bigrams.values())
+    # with open("gvedg.txt", "a") as l:
+    #     l.write(f"\nПропуски: {gap} <-+-> Перехресно: {cross}")
+    #     l.write(f"\nSum: {sum(bigrams.values())}\n")
+    #     l.write('\n')
+    #     for key, value in bigrams.items():
+    #         l.write(f'{key}: {value}\n')
+    #     l.write('-'*50)
+    for key, val in bigrams.items():
+        bigrams[key] = val / bigrams_count
 
     return bigrams
 
@@ -116,17 +76,46 @@ def entropy(bigrams, n = 1):
 def redundancy(h, alphabet):
     return 1 - (h / log2(len(alphabet)))
 
+def text_cl(inp, gap):
+    # text = inp.lower()
+    # text = re.sub(r'[^а-яё\s]+', '', text)
+    # text = re.sub(r'\s+', ' ', text)
+    # text = text if gap else text.replace(" ", "")
+    # text = text.strip()
+
+    char = " "
+    text = ""
+    for s in inp.lower():
+        if s in chk_alph or (gap and s == " " and char != " "):
+            text += s
+            char = s
+        elif s in "\n\t" and char != " ":
+            text += " "
+            char = " "
+    text = text[:-1] if text[-1] == " " else text
+
+    # if gap:
+    #     open("test.txt4", "w").write(text)
+
+    return text
+
+# start
+inp_text = open(file_n, "r", encoding="utf-8").read()
+
+text_g = text_cl(inp_text, True)
+text = text_cl(inp_text, False)
+
 # 1. частоти букв
-letters_g = freq_symbols(True)
-letters = freq_symbols(False)
+letters_g = freq_symbols(text_g)
+letters = freq_symbols(text)
 
 # 2. Перехресні біграми
-cross_bigrams_g = bigrams(True, True)
-cross_bigrams = bigrams(False, True)
+cross_bigrams_g = bigrams(text_g, True, True)
+cross_bigrams = bigrams(text, False, True)
 
 # 3. Не перехресні біграми
-bigrams_g = bigrams(True, False)
-bigrams = bigrams(False, False)
+bigrams_g = bigrams(text_g, True, False)
+bigrams = bigrams(text, False, False)
 
 h1g = entropy(letters_g)
 h1 = entropy(letters)
@@ -134,7 +123,7 @@ crh2g = entropy(cross_bigrams_g, 2)
 crh2 = entropy(cross_bigrams, 2)
 h2g = entropy(bigrams_g, 2)
 h2 = entropy(bigrams, 2)
-avg_entropy = (h1g + h1 + crh2g + crh2 + h2g + h2) / 6
+#avg_entropy = (h1g + h1 + crh2g + crh2 + h2g + h2) / 6
 
 print(f"{'Type of entropy':<40} {'Entropy':<25} {'Redundancy'}")
 print("-" * 90)
