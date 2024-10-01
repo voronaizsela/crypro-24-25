@@ -33,15 +33,18 @@ def freq_symbols(gap):
     text = ""
     
     with open(file_n, "r", encoding="utf-8") as file:
-        #for s in file.read().lower():
-            # if s in chk_alph or (gap and s == " "):
-            #     text += s
-        content = file.read()
-        content = content.lower()
-        cleaned = re.sub(r'[^а-яё\s]+', '', content)
-        cleaned = re.sub(r'\s+', ' ', cleaned)
-        cleaned = cleaned if gap else cleaned.replace(" ", "")
-        text = cleaned.strip()   
+        char = " "
+        for s in file.read().lower():
+            if s in chk_alph or (gap and s == " " and char != " "):
+                text += s
+                char = s
+            elif s in "\n\t" and char != " ":
+                text += " "
+                char = " "
+        text = text[:-1] if text[-1] == " " else text
+
+        # if gap:
+        #     open("test.txt2", "w").write(text) 
 
         for item in text:
             if item not in letters.keys():
@@ -69,16 +72,25 @@ def bigrams(gap, cross):
             bigrams[i + j] = 0
 
     with open(file_n, "r", encoding="utf-8") as file:
-        # for s in file.read().lower():
-        #     if s in chk_alph or (gap and s == " "):
-        #         text += s
+        # text = file.read()
+        # text = text.lower()
+        # text = re.sub(r'[^а-яё\s]+', '', text)
+        # text = re.sub(r'\s+', ' ', text)
+        # text = text if gap else text.replace(" ", "")
+        # text = text.strip()
 
-        content = file.read()
-        content = content.lower()
-        cleaned = re.sub(r'[^а-яё\s]+', '', content)
-        cleaned = re.sub(r'\s+', ' ', cleaned)
-        cleaned = cleaned if gap else cleaned.replace(" ", "")
-        text = cleaned.strip()   
+        char = " "
+        for s in file.read().lower():
+            if s in chk_alph or (gap and s == " " and char != " "):
+                text += s
+                char = s
+            elif s in "\n\t" and char != " ":
+                text += " "
+                char = " "
+        text = text[:-1] if text[-1] == " " else text
+
+        # if gap:
+        #     open("test.txt3", "w").write(text) 
 
         for i in range(0, len(text) - 1, 1 if cross else 2):
             item = text[i] + text[i + 1]
@@ -132,11 +144,11 @@ print(f"{'H2 cross bigrams':<40} {crh2g:<25} {redundancy(crh2g, chk_alph + ' ')}
 print(f"{'H2 cross bigrams without gaps':<40} {crh2:<25} {redundancy(crh2, chk_alph)}")
 print(f"{'H2 bigrams':<40} {h2g:<25} {redundancy(h2g, chk_alph + ' ')}")
 print(f"{'H2 bigrams without gaps':<40} {h2:<25} {redundancy(h2, chk_alph)}")
-print("\nInfo")
-print("-" * 50)
-print(f"{'Max entropy' :<20} {log2(len(chk_alph))}")
-print(f"{'AVG entropy':<20} {avg_entropy}")
-print(f"{'Total redundancy':<20} {redundancy(avg_entropy, chk_alph)}")
+# print("\nInfo")
+# print("-" * 50)
+# print(f"{'Max entropy' :<20} {log2(len(chk_alph))}")
+# print(f"{'AVG entropy':<20} {avg_entropy}")
+# print(f"{'Total redundancy':<20} {redundancy(avg_entropy, chk_alph)}")
 
 # 7. Таблиці
 freq2csv(letters_g, "Table1_freq_g.csv")
