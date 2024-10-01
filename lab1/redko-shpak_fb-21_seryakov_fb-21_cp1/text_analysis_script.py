@@ -112,7 +112,9 @@ class TextAnalyzer:
         directory = os.path.join(self.output_dir, subfolder)
         os.makedirs(directory, exist_ok=True)
         
-        df = pd.DataFrame(frequencies.items(), columns=['Символ', 'Частота'])
+        sorted_frequencies = sorted(frequencies.items(), key=lambda x: x[1], reverse=True)
+        
+        df = pd.DataFrame(sorted_frequencies, columns=['Символ', 'Частота'])
         filepath = os.path.join(directory, filename)
         df.to_excel(filepath, index=False)
         print(f"+] Файл {filename}")
