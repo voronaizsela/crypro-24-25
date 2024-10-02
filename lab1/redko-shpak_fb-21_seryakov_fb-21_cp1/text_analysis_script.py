@@ -85,12 +85,14 @@ class TextAnalyzer:
         return matrix
 
     def plot_bigram_matrix(self, matrix, alphabet, bigram_type, text_type):
+
+        text_type = text_type.lower().replace(' ', '_')
         plt.figure(figsize=(12, 10))
         plt.imshow(matrix, cmap='viridis', norm=LogNorm())
         plt.colorbar(label='Частота (логарифмічна шкала)')
         plt.xticks(range(len(alphabet)), alphabet, rotation=90)
         plt.yticks(range(len(alphabet)), alphabet)
-        plt.title(f"Біграми ({bigram_type}) для тексту {text_type.replace('_', ' ')}")
+        plt.title(f"Біграми {bigram_type} для тексту {text_type.replace('_', ' ')}")
         plt.xlabel('Друга буква біграми')
         plt.ylabel('Перша буква біграми')
         plt.tight_layout()
@@ -98,8 +100,6 @@ class TextAnalyzer:
         directory = os.path.join(self.output_dir, 'біграм_матриці')
         os.makedirs(directory, exist_ok=True)
         
-
-        text_type = text_type.lower().replace(' ', '_')
         filename = f"матриця_біграми_{bigram_type}_для_тексту_{text_type}.png"
         filepath = os.path.join(directory, filename)
         plt.savefig(filepath)
