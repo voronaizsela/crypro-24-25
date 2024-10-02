@@ -92,7 +92,7 @@ class TextAnalyzer:
         plt.colorbar(label='Частота (логарифмічна шкала)')
         plt.xticks(range(len(alphabet)), alphabet, rotation=90)
         plt.yticks(range(len(alphabet)), alphabet)
-        plt.title(f"Біграми {bigram_type} для тексту {text_type.replace('_', ' ')}")
+        plt.title(f"Біграми {(bigram_type.replace('_', ' '))} для тексту {text_type.replace('_', ' ')}")
         plt.xlabel('Друга буква біграми')
         plt.ylabel('Перша буква біграми')
         plt.tight_layout()
