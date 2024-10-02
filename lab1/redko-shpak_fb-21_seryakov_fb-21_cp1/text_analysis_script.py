@@ -211,11 +211,11 @@ class TextAnalyzer:
             self.plot_bigram_matrix(matrix_non_overlapping, alphabet, "не_перетинаючі", text_type)
 
             H_1 = self.calculate_entropy(letter_freq)
-            H_2_overlapping = self.calculate_entropy(bigram_freq)
-            H_2_non_overlapping = self.calculate_entropy(non_overlapping_bigram_freq)
+            H_2_overlapping = self.calculate_entropy(bigram_freq) / 2
+            H_2_non_overlapping = self.calculate_entropy(non_overlapping_bigram_freq) / 2
             R_1 = self.calculate_redundancy(H_1)
-            R_2_overlapping = self.calculate_redundancy(H_2_overlapping / 2)
-            R_2_non_overlapping = self.calculate_redundancy(H_2_non_overlapping / 2)
+            R_2_overlapping = self.calculate_redundancy(H_2_overlapping)
+            R_2_non_overlapping = self.calculate_redundancy(H_2_non_overlapping)
             
             results[text_type] = {
                 "Ентропія H_1": H_1,
@@ -235,6 +235,7 @@ class TextAnalyzer:
 
         self.save_results_to_excel(results)
         self.save_text_no_spaces_to_txt()
+
 
 # мейн
 def main():
