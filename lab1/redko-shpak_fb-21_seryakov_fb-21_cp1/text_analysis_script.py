@@ -13,7 +13,8 @@ class TextAnalyzer:
         self.text_no_spaces = self.remove_spaces(self.text)
         self.alphabet = ''.join(sorted(set(self.text)))
         self.alphabet_no_spaces = ''.join(sorted(set(self.text_no_spaces)))
-        self.H_0 = math.log2(len(self.alphabet))
+        self.H_0_with_spaces = math.log2(len(self.alphabet))
+        self.H_0_without_spaces = math.log2(len(self.alphabet_no_spaces))
         self.script_dir = script_dir
         self.output_dir = os.path.join(script_dir, 'output')
         os.makedirs(self.output_dir, exist_ok=True)
@@ -50,8 +51,11 @@ class TextAnalyzer:
     def calculate_entropy(frequencies):
         return -sum(freq * math.log2(freq) for freq in frequencies.values() if freq > 0)
 
-    def calculate_redundancy(self, H):
-        return 1 - (H / self.H_0)
+    def calculate_redundancy(self, H, with_spaces=True):
+        if with_spaces:
+            return 1 - (H / self.H_0_with_spaces)
+        else:
+            return 1 - (H / self.H_0_without_spaces)
 
     # ф-ії для виведення результатів
     def print_frequencies(self, frequencies, title):
@@ -213,9 +217,10 @@ class TextAnalyzer:
             H_1 = self.calculate_entropy(letter_freq)
             H_2_overlapping = self.calculate_entropy(bigram_freq) / 2
             H_2_non_overlapping = self.calculate_entropy(non_overlapping_bigram_freq) / 2
-            R_1 = self.calculate_redundancy(H_1)
-            R_2_overlapping = self.calculate_redundancy(H_2_overlapping)
-            R_2_non_overlapping = self.calculate_redundancy(H_2_non_overlapping)
+            R_1 = self.calculate_redundancy(H_1, with_spaces=(text_type == "З пробілами"))
+            R_2_overlapping = self.calculate_redundancy(H_2_overlapping, with_spaces=(text_type == "З пробілами"))
+            R_2_non_overlapping = self.calculate_redundancy(H_2_non_overlapping, with_spaces=(text_type == "З пробілами"))
+
             
             results[text_type] = {
                 "Ентропія H_1": H_1,
