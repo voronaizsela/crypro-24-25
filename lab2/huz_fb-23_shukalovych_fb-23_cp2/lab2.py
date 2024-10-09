@@ -1,30 +1,35 @@
 import os
+import re
 
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
 RESET = "\033[0m"
 
+#шифр Віженера
 def vigenere(plaintext, key):
     cipher_text = []
     key_length = len(key)
-    alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'  
+    alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
     for i, char in enumerate(plaintext):
-        if char.islower():  # Шифруємо малі літери
+        if char.islower():
             key_char = key[i % key_length].lower()  
             shift = alphabet.index(key_char)  # Отримаємо зсув за ключем
-            encrypted_char = alphabet[(alphabet.index(char) + shift) % 33]  
+            encrypted_char = alphabet[(alphabet.index(char) + shift) % 33]
             cipher_text.append(encrypted_char)
     return ''.join(cipher_text)
 
+#зробили так, щоб текст був неперервним
 def load_and_clean_text(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             text = file.read()
-        cleaned_text = ' '.join(text.split())
-        return cleaned_text
+        text = text.lower()
+        text = re.sub(r'[^а-яё]', '', text)
+        return text
     except FileNotFoundError:
         print(f"Файл '{file_path}' не знайдено")
         return None
+
 
 def main():
     while True:
@@ -51,7 +56,7 @@ def main():
                 text_choice = input("\nВиберіть опцію: ").strip()
                 
                 if text_choice == '1':
-                    file_path = "lab2.txt"
+                    file_path = "lab2.1.txt"
                     text = load_and_clean_text(file_path)
                     if text:
                         print(f"\nОригінальний текст:\n{text}")
@@ -88,15 +93,8 @@ def main():
                 if not key:
                     print(f"Неправильний вибір '{key_choice}'. Спробуйте знову.")
                     continue  
-                
-                file_path = "lab2.txt" 
-                try:
-                    with open(file_path, 'r', encoding='utf-8') as file:
-                        plaintext = file.read()
-                except FileNotFoundError:
-                    print(f"Файл '{file_path}' не знайдено")
-                    continue 
 
+                plaintext = load_and_clean_text("lab2.1.txt" )
                 cipher_text = vigenere(plaintext, key)
                 print(f"\nЗашифрований текст:\n{cipher_text}")
 
