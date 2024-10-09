@@ -1,4 +1,4 @@
-f_name = "text.txt"
+f_name = "txt/text.txt"
 keys = ["пр", "иве", "тдру", "гчушь", "какаяодинпроцентс"]
 
 # https://planetcalc.com/2468/
@@ -31,4 +31,4 @@ with open(f_name, "r", encoding="utf-8") as f:
 # print(rev_a)
 
 for k in keys:
-    open(f"encrypt_key_{k}.txt", "w").write(vig_encrypt(k, text))
+    open(f"txt/encrypt_key_{k}.txt", "w").write(vig_encrypt(k, text))
