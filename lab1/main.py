@@ -30,8 +30,7 @@ class CryptoTextAnalyzator:
     def _compute_bigram_freq(self):
         n = len(self.text)
         bigram_count_overlap = Counter((self.text[i], self.text[i + 1]) for i in range(n - 1))
-        bigram_count_non_overlap = Counter((self.text[i], self.text[i + 2]) for i in range(n - 2))
-
+        bigram_count_non_overlap = Counter((self.text[i], self.text[i + 1]) for i in range(0, n - 1, 2)) #new
         total_overlap = sum(bigram_count_overlap.values())
         total_non_overlap = sum(bigram_count_non_overlap.values())
 
