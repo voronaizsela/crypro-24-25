@@ -1,3 +1,7 @@
+import os
+import sys
+import matplotlib.pyplot as plt
+
 def count_symbols(text):
     letters = dict()
 
@@ -19,21 +23,28 @@ def c_indx(text):
 
     return s / (l * (l -1))
 
-if __name__ == "__main__":
-    import os
-    import sys
+try:
+    f_list = os.listdir(sys.argv[1])
+except (FileNotFoundError, NotADirectoryError, IndexError):
+    print("No such directory.")
+    exit()
 
-    try:
-        f_list = os.listdir(sys.argv[1])
-    except (FileNotFoundError, NotADirectoryError, IndexError):
-        print("No such directory.")
-        exit()
+dt = {}
+offset = len(max(f_list, key=len))+10
+print(f"{'Files' :<{offset}} Values")
+print("-" * (offset +20))
+for file in f_list:
+    if ".txt" in file:
+        p_file = f"{sys.argv[1]}/{file}"
+        t = open(p_file, "r").read()
+        print(f"{p_file :<{offset}} {c_indx(t)}")
+        if "encrypt_key" in file:
+            dt[f'{len(file[12:-4])}'] = c_indx(t)
 
-    offset = len(max(f_list, key=len))+10
-    print(f"{'Files' :<{offset}} Values")
-    print("-" * (offset +20))
-    for file in f_list:
-        if ".txt" in file:
-            p_file = f"{sys.argv[1]}/{file}"
-            t = open(p_file, "r").read()
-            print(f"{p_file :<{offset}} {c_indx(t)}")
+plt.bar(dt.keys(), dt.values())
+plt.xlabel('Довжина ключа')
+plt.ylabel('Значення I(Y)')
+plt.title('Залежність I(Y) від довжини ключа')
+plt.ylim(min(dt.values()) *0.95, max(dt.values()) *1.03)
+plt.show()
+
