@@ -14,6 +14,7 @@ def vigenere(plaintext, key):
     cipher_text = []
     key_length = len(key)
     alphabet = 'абвгдеёжзийклмнопрстуфхцчшщъыьэюя'
+    
     for i, char in enumerate(plaintext):
         if char.islower():
             key_char = key[i % key_length].lower()  
@@ -65,6 +66,60 @@ def calculate_indexes_for_keys(clear_text, *key_ranges):
 
     return ic_dict
 
+ic_russian = 0.0553
+var_alphabet = 'абвгдежзийклмнопрстуфхцчшщъыьэюя'
+
+# Знаходимо довжину ключа
+def find_key_length(text, max_key_length=31):
+    best_key_length = 0
+    closest_ic_diff = float('inf')
+
+    for key_length in range(2, max_key_length + 1):
+        avg_ic = 0
+
+        # Розбиваємо текст на блоки
+        for i in range(key_length):
+            block = text[i::key_length]
+            avg_ic += index_of_coincidence(block)
+
+        avg_ic /= key_length
+        ic_diff = abs(avg_ic - ic_russian)
+
+        if ic_diff < closest_ic_diff:
+            closest_ic_diff = ic_diff
+            best_key_length = key_length
+
+    return best_key_length
+
+# Частотний аналіз для пошуку ключа
+def find_key(text, key_length):
+    key = []
+    most_common_letter = "о"
+
+    for i in range(key_length):
+        block = text[i::key_length]
+        most_common = Counter(block).most_common(1)[0][0]
+        key_letter = (var_alphabet.index(most_common) - var_alphabet.index(most_common_letter)) % len(var_alphabet)
+        key.append(var_alphabet[key_letter])
+
+    return ''.join(key)
+
+def vigenere_decrypt(cipher_text, key):
+    decrypted_text = []
+    key_length = len(key)
+    alphabet = 'абвгдежзийклмнопрстуфхцчшщъыьэюя'
+    
+    for i, char in enumerate(cipher_text):
+        if char in alphabet:  
+            key_char = key[i % key_length].lower()
+            shift = alphabet.index(key_char) 
+            decrypted_char = alphabet[(alphabet.index(char) - shift) % 32]  
+            decrypted_text.append(decrypted_char)
+        else:
+            decrypted_text.append(char)  
+    
+    return ''.join(decrypted_text)
+
 #побудова гістаграми
 def plot_histogram(data):
     filtered_data = {k: v for k, v in data.items() if v is not None}
@@ -89,7 +144,7 @@ def plot_histogram(data):
     plt.show()
 
 
-def main(ic_results):
+def main(ic_results, clear_text2):
     while True:
         print(YELLOW + "\n♥Меню♥" + RESET)
         print("1. Вивести текст")
@@ -188,7 +243,16 @@ def main(ic_results):
                         print(f"Файл 'encrypted_{key_choice}.txt' не знайдено. Зашифруйте спочатку текст з відповідним ключем.")
 
         elif user_choice == '4':
-                print("\nФункція ще не реалізована.")
+            key_length = find_key_length(clear_text2)
+            key = find_key(clear_text2, key_length)
+            key_v = "громыковедьма"
+
+            print(f"Довжина ключа: {key_length}")
+            print(f"Підібраний ключ: {key}")
+            print(f"Kлюч: {key_v}")
+
+            decrypted_text = vigenere_decrypt(clear_text2, key_v)
+            print(f"Розшифрований текст:\n{decrypted_text}")
 
         elif user_choice == '5':
             while True:
@@ -222,5 +286,7 @@ def main(ic_results):
 
 if __name__ == "__main__":
     clear_text = load_and_clean_text("lab2.1.txt")
+    clear_text2 = load_and_clean_text("lab2.2.txt")
     ic_results = calculate_indexes_for_keys(clear_text, range(2, 6), range(10, 21))
-    main(ic_results)
+    main(ic_results, clear_text2)
+
