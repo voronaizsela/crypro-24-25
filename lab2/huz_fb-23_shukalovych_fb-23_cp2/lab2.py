@@ -73,6 +73,7 @@ var_alphabet = 'абвгдежзийклмнопрстуфхцчшщъыьэюя
 def find_key_length(text, max_key_length=31):
     best_key_length = 0
     closest_ic_diff = float('inf')
+    ic_dict = {}
 
     for key_length in range(2, max_key_length + 1):
         avg_ic = 0
@@ -84,12 +85,13 @@ def find_key_length(text, max_key_length=31):
 
         avg_ic /= key_length
         ic_diff = abs(avg_ic - ic_russian)
+        ic_dict[key_length] = avg_ic
 
         if ic_diff < closest_ic_diff:
             closest_ic_diff = ic_diff
             best_key_length = key_length
 
-    return best_key_length
+    return best_key_length, ic_dict
 
 # Частотний аналіз для пошуку ключа
 def find_key(text, key_length):
@@ -104,6 +106,7 @@ def find_key(text, key_length):
 
     return ''.join(key)
 
+#функція для розшифрування тексту за варіантом
 def vigenere_decrypt(cipher_text, key):
     decrypted_text = []
     key_length = len(key)
@@ -144,7 +147,7 @@ def plot_histogram(data):
     plt.show()
 
 
-def main(ic_results, clear_text2):
+def main(ic_results, clear_text2, key_length, ic_dict):
     while True:
         print(YELLOW + "\n♥Меню♥" + RESET)
         print("1. Вивести текст")
@@ -212,7 +215,7 @@ def main(ic_results, clear_text2):
                 cipher_text = vigenere(plaintext, key)
                 print(f"\nЗашифрований текст:\n{cipher_text}")
 
-                directory = "lab2"
+                directory = "encrypted_text"
                 if not os.path.exists(directory):
                     os.makedirs(directory)
                 output_file = os.path.join(directory, f"encrypted_{key_choice}.txt")
@@ -243,7 +246,6 @@ def main(ic_results, clear_text2):
                         print(f"Файл 'encrypted_{key_choice}.txt' не знайдено. Зашифруйте спочатку текст з відповідним ключем.")
 
         elif user_choice == '4':
-            key_length = find_key_length(clear_text2)
             key = find_key(clear_text2, key_length)
             key_v = "громыковедьма"
 
@@ -252,6 +254,8 @@ def main(ic_results, clear_text2):
             print(f"Kлюч: {key_v}")
 
             decrypted_text = vigenere_decrypt(clear_text2, key_v)
+            with open("decrypted_text.txt", "w", encoding="utf-8") as file:
+                file.write(decrypted_text)
             print(f"Розшифрований текст:\n{decrypted_text}")
 
         elif user_choice == '5':
@@ -276,7 +280,7 @@ def main(ic_results, clear_text2):
                     plot_histogram(ic_results)
                     #print(ic_results)
                 elif dia_choice == '2':
-                    print("краказябра")
+                    plot_histogram(ic_dict)
                 elif dia_choice == '0':
                     break
                 else:
@@ -287,6 +291,7 @@ def main(ic_results, clear_text2):
 if __name__ == "__main__":
     clear_text = load_and_clean_text("lab2.1.txt")
     clear_text2 = load_and_clean_text("lab2.2.txt")
+    key_length, ic_dict = find_key_length(clear_text2)
     ic_results = calculate_indexes_for_keys(clear_text, range(2, 6), range(10, 21))
-    main(ic_results, clear_text2)
+    main(ic_results, clear_text2, key_length, ic_dict)
 
