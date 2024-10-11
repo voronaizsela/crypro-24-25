@@ -2,6 +2,8 @@ import os
 import re
 from collections import Counter
 import matplotlib.pyplot as plt
+import csv
+
 
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
@@ -42,20 +44,24 @@ def index_of_coincidence(text):
 
     return index
 
-#функція для обрахунку індексів відп. для усіх значень ключа шифр.
-def calculate_indexes_for_keys(*key_ranges):
+#функція для обрахунку індексів відп. для усіх значень ключа шифр. та відкритого тексту
+def calculate_indexes_for_keys(clear_text, *key_ranges):
     ic_dict = {}
+
+    ic_value = index_of_coincidence(clear_text)
+    ic_dict['0'] = ic_value
 
     for key_range in key_ranges:
         for key_choice in key_range:
             try:
-                with open(f"lab2/encrypted_{key_choice}.txt", 'r', encoding='utf-8') as file:
+                with open(f"encrypted_text/encrypted_{key_choice}.txt", 'r', encoding='utf-8') as file:
                     content = file.read()
                     ic_value = index_of_coincidence(content)
                     ic_dict[key_choice] = ic_value
             except FileNotFoundError:
                 #print(f"Файл 'encrypted_{key_choice}.txt' не знайдено.")
                 ic_dict[key_choice] = None
+
 
     return ic_dict
 
@@ -71,11 +77,13 @@ def plot_histogram(data):
     values = list(filtered_data.values())
 
     plt.figure(figsize=(10, 6))
-    plt.bar(keys, values, color='pink')
+    plt.bar(range(len(keys)), values, color='pink')
 
     plt.title('Гістограма індексів відповідності')
     plt.xlabel('r')
     plt.ylabel('I')
+
+    plt.xticks(range(len(keys)), keys)
 
     plt.tight_layout()
     plt.show()
@@ -171,7 +179,7 @@ def main(ic_results):
                     print(f'\nІндекс відповідності для ключа :) {key_choice}: {ic_results[key_choice]}')
                 else:
                     try:
-                        with open(f"lab2/encrypted_{key_choice}.txt", 'r', encoding='utf-8') as file:
+                        with open(f"encrypted_text/encrypted_{key_choice}.txt", 'r', encoding='utf-8') as file:
                             content = file.read()
                             ic_value = index_of_coincidence(content)
                             ic_results[key_choice] = ic_value
@@ -192,7 +200,17 @@ def main(ic_results):
                 dia_choice = input("\nВиберіть опцію: ").strip()
 
                 if dia_choice == '1':
+                    with open('data.csv', mode='w', newline='', encoding='utf-8') as file:
+                        writer = csv.writer(file, delimiter=';')
+
+                        writer.writerow(['Довжина ключа', 'Індекс відповідності'])
+
+                        for key, value in ic_results.items():
+                            writer.writerow([key, value])
+
+                    print("Дані успішно записані у файл data.csv:)")
                     plot_histogram(ic_results)
+                    #print(ic_results)
                 elif dia_choice == '2':
                     print("краказябра")
                 elif dia_choice == '0':
@@ -203,5 +221,6 @@ def main(ic_results):
                 print("Неправильний вибір. Спробуйте знову.")
 
 if __name__ == "__main__":
-    ic_results = calculate_indexes_for_keys(range(2, 6), range(10, 21))
+    clear_text = load_and_clean_text("lab2.1.txt")
+    ic_results = calculate_indexes_for_keys(clear_text, range(2, 6), range(10, 21))
     main(ic_results)
