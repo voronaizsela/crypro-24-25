@@ -264,7 +264,7 @@ def main(ic_results, clear_text, clear_text2, key_length, ic_dict):
                     with open('data.csv', mode='w', newline='', encoding='utf-8') as file:
                         writer = csv.writer(file, delimiter=';')
 
-                        writer.writerow(['Довжина ключа', 'Індекс відповідності'])
+                        writer.writerow(['Key length', 'Compliance index'])
 
                         for key, value in ic_results.items():
                             writer.writerow([key, value])
