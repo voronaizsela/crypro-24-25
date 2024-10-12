@@ -4,7 +4,6 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import csv
 
-
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
 RESET = "\033[0m"
@@ -45,12 +44,12 @@ def index_of_coincidence(text):
 
     return index
 
-#функція для обрахунку індексів відп. для усіх значень ключа шифр. та відкритого тексту
+#функція для обрахунку індексів відповідності для усіх значень ключа шифр. та відкритого тексту
 def calculate_indexes_for_keys(clear_text, *key_ranges):
     ic_dict = {}
 
-    ic_value = index_of_coincidence(clear_text)
-    ic_dict['0'] = ic_value
+    ic_value = index_of_coincidence(clear_text) #обрахунок індексу для ВТ
+    ic_dict[0] = ic_value
 
     for key_range in key_ranges:
         for key_choice in key_range:
@@ -63,17 +62,14 @@ def calculate_indexes_for_keys(clear_text, *key_ranges):
                 #print(f"Файл 'encrypted_{key_choice}.txt' не знайдено.")
                 ic_dict[key_choice] = None
 
-
     return ic_dict
-
-ic_russian = 0.0553
-var_alphabet = 'абвгдежзийклмнопрстуфхцчшщъыьэюя'
 
 # Знаходимо довжину ключа
 def find_key_length(text, max_key_length=31):
     best_key_length = 0
     closest_ic_diff = float('inf')
     ic_dict = {}
+    ic_russian = 0.0557
 
     for key_length in range(2, max_key_length + 1):
         avg_ic = 0
@@ -97,6 +93,7 @@ def find_key_length(text, max_key_length=31):
 def find_key(text, key_length):
     key = []
     most_common_letter = "о"
+    var_alphabet = 'абвгдежзийклмнопрстуфхцчшщъыьэюя'
 
     for i in range(key_length):
         block = text[i::key_length]
@@ -147,7 +144,7 @@ def plot_histogram(data):
     plt.show()
 
 
-def main(ic_results, clear_text2, key_length, ic_dict):
+def main(ic_results, clear_text, clear_text2, key_length, ic_dict):
     while True:
         print(YELLOW + "\n♥Меню♥" + RESET)
         print("1. Вивести текст")
@@ -173,16 +170,10 @@ def main(ic_results, clear_text2, key_length, ic_dict):
                 text_choice = input("\nВиберіть опцію: ").strip()
                 
                 if text_choice == '1':
-                    file_path = "lab2.1.txt"
-                    text = load_and_clean_text(file_path)
-                    if text:
-                        print(f"\nОригінальний текст:\n{text}")
+                    print(f"\nОригінальний текст:\n{clear_text}")
                 
                 elif text_choice == '2':
-                    file_path = "lab2.2.txt"
-                    text = load_and_clean_text(file_path)
-                    if text:
-                        print(f"\nОригінальний текст::\n{text}")
+                    print(f"\nОригінальний текст::\n{clear_text2}")
                 
                 elif text_choice == '0':
                     break  
@@ -211,14 +202,13 @@ def main(ic_results, clear_text2, key_length, ic_dict):
                     print(f"Неправильний вибір '{key_choice}'. Спробуйте знову.")
                     continue  
 
-                plaintext = load_and_clean_text("lab2.1.txt" )
-                cipher_text = vigenere(plaintext, key)
+                cipher_text = vigenere(clear_text, key)
                 print(f"\nЗашифрований текст:\n{cipher_text}")
 
                 directory = "encrypted_text"
                 if not os.path.exists(directory):
                     os.makedirs(directory)
-                output_file = os.path.join(directory, f"encrypted_{key_choice}.txt")
+                output_file = os.path.join(directory, f"encrypted_{key_choice}.txt") #збереження зашифрованого тексту
                 with open(output_file, 'w', encoding='utf-8') as file:
                     file.write(cipher_text)
 
@@ -228,13 +218,15 @@ def main(ic_results, clear_text2, key_length, ic_dict):
             print(
                 YELLOW + "\n-♥-Введіть довжину ключа для знаходження індексу відповідності-♥-" + RESET + '\nМожливі довжини ключа: 2-5, 10-20')
 
+            print(f'\nІндекс відповідності для відкритого тексту: {ic_results[0]}')
+
             while True:
                 key_choice = int(input("\nВведіть довжину ключа або '0' для повернення: "))
                 if key_choice == 0:
                     break
 
                 if key_choice in ic_results and ic_results[key_choice] is not None:
-                    print(f'\nІндекс відповідності для ключа :) {key_choice}: {ic_results[key_choice]}')
+                    print(f'\nІндекс відповідності для ключа {key_choice}: {ic_results[key_choice]}')
                 else:
                     try:
                         with open(f"encrypted_text/encrypted_{key_choice}.txt", 'r', encoding='utf-8') as file:
@@ -247,7 +239,7 @@ def main(ic_results, clear_text2, key_length, ic_dict):
 
         elif user_choice == '4':
             key = find_key(clear_text2, key_length)
-            key_v = "громыковедьма"
+            key_v = "громыковедьма" #підібрали "вручну" після отриманого результату
 
             print(f"Довжина ключа: {key_length}")
             print(f"Підібраний ключ: {key}")
@@ -256,14 +248,15 @@ def main(ic_results, clear_text2, key_length, ic_dict):
             decrypted_text = vigenere_decrypt(clear_text2, key_v)
             with open("decrypted_text.txt", "w", encoding="utf-8") as file:
                 file.write(decrypted_text)
-            print(f"Розшифрований текст:\n{decrypted_text}")
+            print(f"\nРозшифрований текст:\n{decrypted_text}")
+            print("\nРозшифрований текст збережено у decrypted_text.txt")
 
         elif user_choice == '5':
             while True:
                 print(YELLOW + "\n-♥-Меню виведення діаграм-♥-" + RESET)
                 print("0. Повернутись")
-                print("1. Діаграма в1")
-                print("2. Діаграма в2")
+                print("1. Діаграма п.2")
+                print("2. Діаграма п.3")
 
                 dia_choice = input("\nВиберіть опцію: ").strip()
 
@@ -289,9 +282,13 @@ def main(ic_results, clear_text2, key_length, ic_dict):
                 print("Неправильний вибір. Спробуйте знову.")
 
 if __name__ == "__main__":
+
     clear_text = load_and_clean_text("lab2.1.txt")
     clear_text2 = load_and_clean_text("lab2.2.txt")
+
     key_length, ic_dict = find_key_length(clear_text2)
+
     ic_results = calculate_indexes_for_keys(clear_text, range(2, 6), range(10, 21))
-    main(ic_results, clear_text2, key_length, ic_dict)
+
+    main(ic_results, clear_text, clear_text2, key_length, ic_dict)
 
