@@ -16,8 +16,8 @@ def PreprocessText(AllowedChars, InputFileName, OutputFileName, AllowNewLines = 
     
     FormerChar = " "
     if (os.path.isfile(InputFileName)):
-        with open(InputFileName, "r") as InputFile:
-            with open(OutputFileName, "w") as OutputFile:
+        with open(InputFileName, "r", encoding="utf-8") as InputFile:
+            with open(OutputFileName, "w", encoding="utf-8") as OutputFile:
                 Notfirst = True
                 while True:
                     char = InputFile.read(1).lower()
@@ -47,7 +47,7 @@ def CalculateSingleLetterFrequency(InputFileName, CharArray):
         ResultDict.update({CharArray[i]: [0,0]})
 
     if (os.path.isfile(InputFileName)):
-        with open(InputFileName, "r") as InputFile:
+        with open(InputFileName, "r", encoding="utf-8") as InputFile:
             while True:
                 char = InputFile.read(1).lower()
                 if (char in CharArray):
@@ -82,7 +82,7 @@ def CalculateBigramFrequency(InputFileName, CharArray, DoublePass = True):
             ResultDict.update({AllowedChars[i]+AllowedChars[j]: [0,0]})
     
     if (os.path.isfile(InputFileName)):
-        with open(InputFileName, "r") as InputFile:
+        with open(InputFileName, "r", encoding="utf-8") as InputFile:
             for i in range(0,2):
                 InputFile.seek(0)
                 if (i == 1):
@@ -120,7 +120,7 @@ def CalculateEntropy(FrequencyDict):
         if(value[1] != 0):
             EntropyOfN = EntropyOfN + (value[1] * math.log(value[1], 2))
     
-    EntropyOfN = -EntropyOfN / 2
+    EntropyOfN = -EntropyOfN / len(next(iter(FrequencyDict)))
     return EntropyOfN
 
 
