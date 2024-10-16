@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import math
 import csv
 
@@ -114,8 +115,11 @@ def main():
 
     print("*** Index of Coincidence ***\n" + "-" * 30)
     for i in range(len(index_val)):
-        print(f"Y{i + 2}: {index_val[i]}")
+        print(f"{i + 2}: {index_val[i]}")
     print()
+
+    print("*** Theoretical value of I ***\n" + "-" * 30)
+    print(calc_theor_val(), "\n")
 
     key_len = find_key_len(index_val)
     key = get_key(text, key_len)
@@ -129,6 +133,12 @@ def main():
     dec_text = decode_text(text, key)
     print(f"*** Decoded text ***\n" + "-" * 30)
     print(dec_text, "\n")
+
+    # Plot
+    plt.plot(index_val)
+    plt.xlabel('Довжина ключа')
+    plt.ylabel('Індекс відповідності')
+    plt.show()
 
 if __name__ == "__main__":
     main()
