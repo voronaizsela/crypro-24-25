@@ -1,22 +1,19 @@
-from decimal import Decimal, getcontext
 import random
+from tabulate import tabulate
 
-getcontext().prec = 50
 
 ALPHABET = "абвгдежзийклмнопрстуфхцчшщъыьэюя"
-freqMono = {'о': 0.13407122044703443, 'е': 0.08105676907131823, 'н': 0.07174844046385201, 'а': 0.07163110859064865, 'т': 0.055400199464184445, 'и': 0.05418777010774977, 'с': 0.049572716428417776, 'л': 0.047988736140172475, 'в': 0.04356923558284608, 'р': 0.0414963724895868, 'п': 0.03283336918473904, 'д': 0.03205115669671666, 'к': 0.03156227389170268, 'м': 0.029078749242231652, 'у': 0.027338326456381876, 'ы': 0.025656569607133778, 'б': 0.021549954045016327, 'я': 0.02043530124958445, 'з': 0.020181082190977178, 'г': 0.01988775250796879, 'ь': 0.018890431585740268, 'ч': 0.013571386667188141, 'ж': 0.011361636388524943, 'й': 0.011068306705516553, 'ю': 0.00901499892445783, 'х': 0.008858556426853355, 'ш': 0.005827483035766666, 'щ': 0.0040479496255157715, 'э': 0.003774175254707941, 'ц': 0.0012710952930363533, 'ъ': 0.0005084381172145413, 'ф': 0.0005084381172145413}
-
-# a = {}
-# for i in freqMono:
-#     a[i] = float(freqMono[i])
-# print(a)
+MOST_FREQUENT_SYMBOL = "о"
 
 
+# encrypt one symbol using Caesar cipher
 def encrypt(m, k) -> str:
     i = (ALPHABET.find(m) + ALPHABET.find(k)) % len(ALPHABET)
     return ALPHABET[i]
 
 
+# encrypt text using keystream (stream of character)
+# Useful for encrypt with Vigenere cipher
 def encrypt_stream(pt: str, stream_key) -> str:
     ct = ""
     for m in pt:
@@ -25,11 +22,14 @@ def encrypt_stream(pt: str, stream_key) -> str:
     return ct
 
 
+# decrypt one symbol using Caesar cipher
 def decrypt(c, k) -> str:
     i = (ALPHABET.find(c) - ALPHABET.find(k)) % len(ALPHABET)
     return ALPHABET[i]
 
 
+# decrypt text using keystream (stream of character)
+# Useful for decrypt with Vigenere cipher
 def decrypt_stream(ct: str, stream_key) -> str:
     pt = ""
     for c in ct:
@@ -39,6 +39,8 @@ def decrypt_stream(ct: str, stream_key) -> str:
 
 
 # Index of coincidence
+# Indicates how evenly the characters
+# are distributed in the language
 def ic(text: str) -> float:
     alph = {i: 0 for i in ALPHABET}
     for i in text:
@@ -54,6 +56,8 @@ def ic(text: str) -> float:
     return summ / (sum(alph.values()) * (sum(alph.values())-1)) 
 
 
+# Used for find sum of Kronecker symbols over all text
+# for specified distance between letters
 def colision_stat(text: str, r: int) -> int:
     stat = 0
     for i in range(len(text)-r):
@@ -62,6 +66,9 @@ def colision_stat(text: str, r: int) -> int:
     return stat
 
 
+# lowerize text and remove all
+# non alpha character, whitespace
+# not included in prepared text
 def prepare_text(text: str) -> str:
     out = ""
     for i in text:
@@ -73,6 +80,7 @@ def prepare_text(text: str) -> str:
     return out
 
 
+# calculate symbol frequencies in text
 def frequencies(text: str) -> dict[str, float]:
     freq = {i: 0 for i in ALPHABET}
     for i in text:
@@ -88,6 +96,8 @@ def frequencies(text: str) -> dict[str, float]:
     return dict(sorted(freq.items(), key=lambda item: item[1], reverse=True))
 
 
+# class that used for generate keystream
+# for encrypting with vigenere cipher
 class VigenereKeyStream:
     key: str
     key_len: int
@@ -101,9 +111,12 @@ class VigenereKeyStream:
         self.key = key
         self.key_len = len(key)
 
+    # reset offset for reusing 
+    # existed key
     def reset(self):
         self.offset = 0
 
+    # produce next symbol from key
     def next(self) -> str:
         s = self.key[self.offset]
         self.offset = (self.offset + 1) % self.key_len
@@ -113,70 +126,71 @@ class VigenereKeyStream:
 def main():
 
     keys = ["а", "вы", "дуб", "ночь", "огонь", "вопрос", "медведь", "мельница", "организмы", "предложить", "преподавать", "исследовать", "неопределенность", "профессионально", "непредсказуемость", "систематизированный"]
-    # long_keys = ["".join(random.choices(ALPHABET, k=i)) for i in range(10, 41)]
-    # keys += long_keys
+    keys = ["".join(random.choices(ALPHABET, k=i)) for i in range(1, 31)]
 
-    print("Keys:", keys)
 
     text = ""
-    with open("/home/user/uni/crypro-24-25/lab2/perebynos_fb-22_vlasenko_fb-22_cp2/texts/pt.txt", "r") as f:
+    with open("texts/pt.txt", "r") as f:
         text = f.read()
     pt = prepare_text(text)
     
     print("IC0:", 1/len(ALPHABET))
 
     print("IC(pt):", ic(pt))
+    print("IC for plaintext encrypted by keys of different length")
+    ptctr = []
     for i in keys:
         ks = VigenereKeyStream(i)
         ct = encrypt_stream(pt, ks)
-        print(f"IC(pt ct r={len(i)}):", ic(ct))
+        ptctr.append(f"IC(ct r={len(i)}): {ic(ct)}")
     
+    print(tabulate([ptctr[i:i+3] for i in range(0, len(ptctr), 3)], headers=["", "", ""]))
+    print()
     text = ""
-    with open("/home/user/uni/crypro-24-25/lab2/perebynos_fb-22_vlasenko_fb-22_cp2/texts/2_ct.txt", "r") as f:
+    with open("texts/2_ct.txt", "r") as f:
         text = f.read()
     ct = prepare_text(text)
 
 
-    print("IC(ct):", ic(ct))    
-    for i in range(14, 15):
-        print(f"IC(ct r={i})", ic(ct[::i]))
+    print("IC(ct):", ic(ct))
+    ctic = []
+    ctcs = []
+    for i in range(1, 31):
+        ctic.append(f"CS(ct r={i}): {colision_stat(ct, i)}")
+        ctcs.append(f"IC(ct r={i}): {ic(ct[::i])}")
 
+    print("IC for cipher text with different length of key")
+    print(tabulate([ctic[i:i+3] for i in range(0, len(ctic), 3)], headers=["", "", ""]))
+    print("\nSum of Kroneker symbol for differen length of key")
+    print(tabulate([ctcs[i:i+3] for i in range(0, len(ctcs), 3)], headers=["", "", ""]))
 
-    # key_len = 14
-    # for k in range(1):
+    print()
+    print("Letters frequency for every key symbol")
+    key_len = 14
+    for i in range(key_len):
+        freq = frequencies(ct[i::key_len])
+        print(f"Letter {i}:", list(freq.items())[:5])
+    
+    print()
 
-    #     key = ""
-    #     for i in range(key_len):
-
-    #         freq = frequencies(ct[i::key_len])
-    #         print(f"Letter {i}:", freq)
-    #         c = list(freq.keys())[0]
-    #         key += decrypt(c, list(freqMono.keys())[k])
-
-    #     print(key)
-
-    # keyfrag = ["фэ", "ьу", "яц", "рлщ", "ук", "йт", "ты", "цин", "ч", "тд", "ьу", "х", "ьу", "ю"]
-    # def reqout(part, symbols):
-    #     if len(part) >= 14:
-    #         print(part)
-    #         return
-    #     mb = symbols[:1][0]
-    #     for i in mb:
-    #         i = decrypt(i, list(freqMono.keys())[0])
-    #         reqout(part+i, symbols[1:])
-
-    # reqout("", keyfrag)
-
+    # save probably correct keys in file
+    with open("texts/keys.txt", "w") as f:
+        keyfrag = ["фэ", "ьу", "яц", "рлщ", "ук", "йт", "ты", "цин", "ч", "тд", "ьу", "х", "ьу", "ю"]
+        def reqout(part, symbols):
+            if len(part) >= 14:
+                f.write(part + "\n")
+                return
+            mb = symbols[:1][0]
+            for i in mb:
+                i = decrypt(i, MOST_FREQUENT_SYMBOL)
+                reqout(part+i, symbols[1:])
+        reqout("", keyfrag)
+    
+    print("Key:", "последнийдозор")
+    # decrypt and save plaintext in file
     ks = VigenereKeyStream("последнийдозор")
-    print(decrypt_stream(ct, ks))
-    # print(decrypt("з", "ь"))
-    # print("PT:", text[:50])
-    # key_stream = VigenereKeyStream("козак")
-    # ct = encrypt_stream(text, key_stream)
-    # print("CT:", ct[:50])
-    # key_stream.reset()
-    # pt2 = decrypt_stream(ct, key_stream)
-    # print("PT2:", pt2[:50])
+    with open("texts/2_pt.txt", "w") as f:
+        f.write(decrypt_stream(ct, ks))
 
 
 if __name__=="__main__":
