@@ -9,7 +9,8 @@ def read_txt_file(path):
     return text
 
 def clean_text(text):
-    new_text = re.sub(r'[^а-яё ]', ' ', text.lower())
+    new_text = re.sub(r'[^а-яё ]', '', text.lower())
+    new_text = re.sub(r'\s+', ' ', new_text)
     return new_text
 
 def clean_text_no_spaces(text):
@@ -34,7 +35,7 @@ def calc_char_frequencies(text, sort_by_value=False):
 
 def print_char_frequencies(char_frequencies):
     for key, value in char_frequencies.items():
-        print(f"'{key}': {value}")
+        print(f"{value}")
 
 def calc_bigram_frequencies(bigrams):
     bigrams_count = len(bigrams)
@@ -47,7 +48,6 @@ def calc_bigram_frequencies(bigrams):
     frequency_matrix = {}
     for first_char, inner_dict in count_matrix.items():
         frequency_matrix[first_char] = {second_char: count/bigrams_count for second_char, count in inner_dict.items()}
-    
     return frequency_matrix
 
 def print_bigram_frequency_matrix(frequency_matrix):
@@ -89,7 +89,8 @@ def get_h1(probabilities):
 def get_h2(probabilities_matrix):
     h2 = 0.0
     for _, probabilities in probabilities_matrix.items():
-        h2 += get_h1(probabilities)/2
+        
+        h2 += get_h1(probabilities)
     
     return h2/2
 
@@ -102,7 +103,9 @@ def do_lab1():
     raw_text = read_txt_file(text_path)
     text = clean_text(raw_text)
     text_no_spaces = clean_text_no_spaces(raw_text)
-
+    
+    print(text[:1000])
+    
     print('\nLetter frequencies')
 
     print("\nwith spaces")
