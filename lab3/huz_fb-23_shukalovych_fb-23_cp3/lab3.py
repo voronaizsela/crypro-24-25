@@ -23,16 +23,50 @@ def bigram_frequencies(bigram_counts, total_bigrams):
         frequencies[bigram] = count / total_bigrams
     return frequencies
 
-def print_top_5_bigrams(bigram_frequencies):
+
+def print_top_5_bigrams(bigram_frequencies, i=False):
     top_5_bigrams = dict(sorted(bigram_frequencies.items(), key=lambda x: x[1], reverse=True)[:5])
 
-    print("Найчастіші біграми та їх частоти:")
-    for bigram, frequency in top_5_bigrams.items():
-        print(f"{bigram}: {frequency:.5f}")
+    if i is True:
+        print("Найчастіші біграми та їх частоти:")
+        for bigram, frequency in top_5_bigrams.items():
+            print(f"{bigram}: {frequency:.5f}")
+    else:
+        return top_5_bigrams
+def find_key_candidates(plain_bigrams, cipher_bigrams):
+    m_squared = 31 * 31  # 961
+    alphabet = "абвгдеежзийклмнопрстуфхцчшщыьэюя"
+    letter_to_index = {letter: idx for idx, letter in enumerate(alphabet)}
+    candidates = []
 
-    return top_5_bigrams
+    def bigram_to_index(bigram):
+        return letter_to_index[bigram[0]] * 31 + letter_to_index[bigram[1]]
 
-def main():
+    plain_positions = [bigram_to_index(bigram) for bigram in plain_bigrams]
+    cipher_positions = [bigram_to_index(bigram) for bigram in cipher_bigrams]
+
+    for X1 in plain_positions:
+        for X2 in plain_positions:
+            if X1 == X2:
+                continue
+
+            for Y1 in cipher_positions:
+                for Y2 in cipher_positions:
+                    if Y1 == Y2:
+                        continue
+
+                    delta_x = (X1 - X2) % m_squared
+                    delta_y = (Y1 - Y2) % m_squared
+
+                    a_solutions = solve_linear_congruence(delta_x, delta_y, m_squared)
+                    if a_solutions:
+                        for a in a_solutions:
+                            b = (Y1 - a * X1) % m_squared
+                            candidates.append((a, b))
+
+    return candidates
+
+def main(bigram_freq):
     while True:
         print(YELLOW + "\n♥Меню♥" + RESET)
         print("1. Математичні операції")
@@ -98,19 +132,25 @@ def main():
                 else:
                     print("Неправильний вибір. Спробуйте знову.")
         elif user_choice == '2':
-            with open('04.txt', 'r', encoding='utf-8') as file:
-                content = file.read()
-            bigram_counts = count_bigrams_no_overlap(content)
-            total_bigrams = count_total_bigrams(bigram_counts)
-            bigram_freq = bigram_frequencies(bigram_counts, total_bigrams)
-            #print(bigram_freq)
-            print_top_5_bigrams(bigram_freq)
+            print_top_5_bigrams(bigram_freq, i=True)
         elif user_choice == '3':
-            print("краказябра")
+            cipher_top_bigrams = list(print_top_5_bigrams(bigram_freq).keys())
+            plain_top_bigrams = ["ст", "но", "то", "на", "ен"]
+
+            candidates = find_key_candidates(plain_top_bigrams, cipher_top_bigrams)
+            print("Можливі кандидати на ключі (a, b):")
+            for candidate in candidates:
+                print(candidate)
+
         elif user_choice == '4':
             print("краказябра")
         else:
             print("Неправильний вибір. Спробуйте знову.")
 
 if __name__ == "__main__":
-    main()
+    with open('04.txt', 'r', encoding='utf-8') as file:
+        content = file.read()
+    bigram_counts = count_bigrams_no_overlap(content)
+    total_bigrams = count_total_bigrams(bigram_counts)
+    bigram_freq = bigram_frequencies(bigram_counts, total_bigrams)
+    main(bigram_freq)
