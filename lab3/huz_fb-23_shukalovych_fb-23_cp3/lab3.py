@@ -1,3 +1,9 @@
+import sys
+import os
+
+sys.path.append(r"C:\study\3 course\crypto\crypro-24-25\lab1\huz_fb-23_shukalovych_fb-23_cp1")
+
+from lab1 import * 
 from math_operations import *
 
 YELLOW = "\033[93m"
@@ -8,13 +14,14 @@ def main():
     while True:
         print(YELLOW + "\n♥Меню♥" + RESET)
         print("1. Математичні операції")
-        print("2. Співставлення частот біграм") #реалізувати меню для цього
-        print("3. Дешифрування тексту")
-        print("4. Вийти")
+        print("2. П'ять найчастіших біграм")
+        print("3. Співставлення частот біграм") #реалізувати меню для цього
+        print("4. Дешифрування тексту")
+        print("5. Вийти")
 
         user_choice = input("Виберіть опцію: ").strip()
 
-        if user_choice == '4':
+        if user_choice == '5':
             print(BLUE + " /}___/}❀\n( • . •)\n/ >    > Byeee" + RESET)
             break
 
@@ -69,7 +76,10 @@ def main():
                 else:
                     print("Неправильний вибір. Спробуйте знову.")
         elif user_choice == '2':
-            print("краказябра")
+            bigram_counts = count_bigrams_no_overlap("04.txt")
+            total_bigrams = count_total_bigrams(bigram_counts)
+            bigram_frequenc = bigram_frequencies(bigram_counts, total_bigrams)
+            print_bigram_frequencies(bigram_frequenc)
         elif user_choice == '3':
             print("краказябра")
         else:
