@@ -1,28 +1,38 @@
 from math_operations import *
 from collections import Counter
+import re
 
 YELLOW = "\033[93m"
 BLUE = "\033[94m"
 RESET = "\033[0m"
 
-#кількість біграм без перетину
+def load_and_clean_text(file_path):
+    try:
+        with open(file_path, 'r', encoding='utf-8') as file:
+            text = file.read()
+        text = text.lower()
+        text = re.sub(r'[^абвгдеежзийклмнопрстуфхцчшщыьэюя]', '', text)
+        return text
+    except FileNotFoundError:
+        print(f"Файл '{file_path}' не знайдено")
+        return None 
+    
 def count_bigrams_no_overlap(text):
-    bigrams = [text[i:i + 2] for i in range(0, len(text) - 1, 2)]
+    bigrams = [text[i:i + 2] for i in range(0, len(text) - 1, 2)]  
     bigram_counts = Counter(bigrams)
     return bigram_counts
 
-#загальна кількість біграм
+# Загальна кількість біграм
 def count_total_bigrams(bigram_counts):
     total_bigrams = sum(bigram_counts.values())
     return total_bigrams
 
-#частота біграм
+# Частота біграм
 def bigram_frequencies(bigram_counts, total_bigrams):
     frequencies = {}
     for bigram, count in bigram_counts.items():
         frequencies[bigram] = count / total_bigrams
     return frequencies
-
 
 def print_top_5_bigrams(bigram_frequencies, i=False):
     top_5_bigrams = dict(sorted(bigram_frequencies.items(), key=lambda x: x[1], reverse=True)[:5])
@@ -33,45 +43,85 @@ def print_top_5_bigrams(bigram_frequencies, i=False):
             print(f"{bigram}: {frequency:.5f}")
     else:
         return top_5_bigrams
-def find_key_candidates(plain_bigrams, cipher_bigrams):
-    m_squared = 31 * 31  # 961
-    alphabet = "абвгдеежзийклмнопрстуфхцчшщыьэюя"
-    letter_to_index = {letter: idx for idx, letter in enumerate(alphabet)}
-    candidates = []
 
-    def bigram_to_index(bigram):
-        return letter_to_index[bigram[0]] * 31 + letter_to_index[bigram[1]]
+def find_top_5_bigrams(text):
+    bigram_counts = count_bigrams_no_overlap(text)
+    total_bigrams = count_total_bigrams(bigram_counts)
+    frequencies = bigram_frequencies(bigram_counts, total_bigrams)
+    return print_top_5_bigrams(frequencies, i=False)
 
-    plain_positions = [bigram_to_index(bigram) for bigram in plain_bigrams]
-    cipher_positions = [bigram_to_index(bigram) for bigram in cipher_bigrams]
 
-    for X1 in plain_positions:
-        for X2 in plain_positions:
-            if X1 == X2:
-                continue
+def affine_decrypt(ciphertext, candidates):
+    decrypted_texts = []
+    m = 31  
+    for a, b in candidates:
+        decrypted_text = []       
+        
+        a_inverse = pow(a, -1, m)
 
-            for Y1 in cipher_positions:
-                for Y2 in cipher_positions:
-                    if Y1 == Y2:
-                        continue
+        for char in ciphertext:
+            if char.isalpha():
+                
+                y = (a_inverse * (ord(char) - ord('а') - b)) % m
+                decrypted_text.append(chr(y + ord('а')))
+            else:
+                decrypted_text.append(char)
 
-                    delta_x = (X1 - X2) % m_squared
-                    delta_y = (Y1 - Y2) % m_squared
+        decrypted_texts.append((a, b, ''.join(decrypted_text)))
 
-                    a_solutions = solve_linear_congruence(delta_x, delta_y, m_squared)
-                    if a_solutions:
-                        for a in a_solutions:
-                            b = (Y1 - a * X1) % m_squared
-                            candidates.append((a, b))
+    return decrypted_texts
 
-    return candidates
 
-def main(bigram_freq):
+def contains_unreal_bigrams(text, unreal_bigrams):
+    for i in range(len(text) - 1):
+        bigram = text[i:i + 2]
+        if bigram in unreal_bigrams:
+            return True
+    return False
+
+
+def frequency_check(text, frequent_letters, rare_letters):
+    text = text.lower()
+    total_count = len(text)
+
+    if total_count == 0:
+        return False
+
+    frequent_count = sum(text.count(letter) for letter in frequent_letters)
+    frequent_check = frequent_count / total_count >= 0.1
+
+    rare_count = sum(text.count(letter) for letter in rare_letters)
+    rare_check = rare_count / total_count <= 0.05
+
+    return frequent_check and rare_check
+
+
+def decrypt_affine_candidates(ciphertext, candidates, unreal_bigrams):
+    frequent_letters = ['о', 'а', 'е']
+    rare_letters = ['ф', 'щ', 'ь']
+    valid_keys = []  
+    
+    decrypted_results = affine_decrypt(ciphertext, candidates)
+
+    for a, b, decrypted_text in decrypted_results:
+        
+        if not contains_unreal_bigrams(decrypted_text, unreal_bigrams) and frequency_check(decrypted_text, frequent_letters, rare_letters):
+            valid_keys.append((a, b, decrypted_text))  
+    if valid_keys:  
+        for a, b, text in valid_keys:
+            print(f"Змістовний текст з ключем (a={a}, b={b}): {text}")
+    else:
+        print("Не знайдено жодного змістовного тексту.")
+
+
+
+
+def main(bigram_freq, candidates, content, unreal_bigrams):
     while True:
         print(YELLOW + "\n♥Меню♥" + RESET)
         print("1. Математичні операції")
         print("2. П'ять найчастіших біграм")
-        print("3. Співставлення частот біграм") #реалізувати меню для цього
+        print("3. Співставлення частот біграм") 
         print("4. Дешифрування тексту")
         print("5. Вийти")
 
@@ -134,23 +184,23 @@ def main(bigram_freq):
         elif user_choice == '2':
             print_top_5_bigrams(bigram_freq, i=True)
         elif user_choice == '3':
-            cipher_top_bigrams = list(print_top_5_bigrams(bigram_freq).keys())
-            plain_top_bigrams = ["ст", "но", "то", "на", "ен"]
-
-            candidates = find_key_candidates(plain_top_bigrams, cipher_top_bigrams)
             print("Можливі кандидати на ключі (a, b):")
             for candidate in candidates:
                 print(candidate)
 
         elif user_choice == '4':
-            print("краказябра")
+           decrypt_affine_candidates(content, candidates, unreal_bigrams)
+
         else:
             print("Неправильний вибір. Спробуйте знову.")
 
 if __name__ == "__main__":
-    with open('04.txt', 'r', encoding='utf-8') as file:
-        content = file.read()
+    content = load_and_clean_text('04.txt')
     bigram_counts = count_bigrams_no_overlap(content)
     total_bigrams = count_total_bigrams(bigram_counts)
     bigram_freq = bigram_frequencies(bigram_counts, total_bigrams)
-    main(bigram_freq)
+    cipher_top_bigrams = list(print_top_5_bigrams(bigram_freq).keys())
+    plain_top_bigrams = ['ст', 'но', 'то', 'на', 'ен']
+    candidates = find_key_candidates(plain_top_bigrams, cipher_top_bigrams)
+    unreal_bigrams = ['аь', 'уь', 'яь', 'юь', 'еь', 'оь', 'йь', 'ыь', 'иь', 'эь', 'ъд']
+    main(bigram_freq, candidates, content, unreal_bigrams)
