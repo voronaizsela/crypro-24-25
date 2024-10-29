@@ -6,17 +6,20 @@ YELLOW = "\033[93m"
 BLUE = "\033[94m"
 RESET = "\033[0m"
 
+alphabet = 'абвгдежзийклмнопрстуфхцчшщьыэюя'
+invalid_bigrams = ['аь', 'оь', 'еы', 'иы', 'уь'] # Неіснуючі біграми
+
 # Завантаження та очищення тексту
 def load_and_clean_text(file_path):
     try:
         with open(file_path, 'r', encoding='utf-8') as file:
             text = file.read()
-        text = text.lower()
-        text = re.sub(r'[^абвгдеежзийклмнопрстуфхцчшщыьэюя]', '', text)
+            text = text.lower()
+            text = re.sub(r'[^' + re.escape(alphabet) + ' ]', '', text)
         return text
     except FileNotFoundError:
         print(f"Файл '{file_path}' не знайдено")
-        return None 
+        return None
 
 # Підрахунок біграм без перетинання
 def count_bigrams_no_overlap(text):
@@ -61,22 +64,48 @@ def keys_find(cipher_bigrams, plain_bigrams):
                 keys.append((a, b))
     return keys
 
-alphabet = 'абвгдежзийклмнопрстуфхцчшщыьэюя'
 
+# Функція для дешифрування тексту
+def decrypt_affine(ciphertext, a, b, m):
 
-def main(bigram_freq, content, unreal_bigrams):
-    candidates = [] 
-    ciphertext = content  
-    forbidden_bigrams = ['аь', 'оь', 'еь', 'иь'] 
+    a_inverse = extended_euclidean(a, m ** 2)
+    if a_inverse is None:
+        print(f"Обернений елемент для a={a} не існує, пропускаємо ключ (a, b) = ({a}, {b})")
+        return None
+
+    decrypted_text = []
+    for i in range(0, len(ciphertext) - 2, 2):
+        Y_i = alphabet.index(ciphertext[i]) * m + alphabet.index(ciphertext[i + 1])
+        X_i = (a_inverse * (Y_i - b)) % (m ** 2)
+        p2 = X_i % m
+        p1 = (X_i - p2) // m
+        decrypted_text.append(alphabet[p1])
+        decrypted_text.append(alphabet[p2])
+
+    return ''.join(decrypted_text)
+
+#функція для перевірки змістовності тексту
+def is_meaningful_text(text):
+    for bigram in invalid_bigrams:
+        if bigram in text:
+            return False
+
+    return True
+
+def main(bigram_freq, ciphertext):
+    candidates = []
+    decrypted_texts = {}
+    decrypted_var4 = []
     while True:
         print(YELLOW + "\n♥Меню♥" + RESET)
         print("1. Математичні операції")
         print("2. П'ять найчастіших біграм")
         print("3. Співставлення частот біграм") 
         print("4. Дешифрування тексту")
-        print("5. Вийти")
+        print("5. Аналіз тексту на змістовність")
+        print("6. Вийти")
         user_choice = input("Виберіть опцію: ").strip()
-        if user_choice == '5':
+        if user_choice == '6':
             print(BLUE + " /}___/}❀\n( • . •)\n/ >    > Byeee" + RESET)
             break
         if user_choice == '1':
@@ -144,15 +173,38 @@ def main(bigram_freq, content, unreal_bigrams):
 
         elif user_choice == '4':
             if candidates:
-                pass
+                print("Дешифрування тексту для кожного кандидата ключа:")
+                for a, b in candidates:
+                    decrypted_text = decrypt_affine(ciphertext, a, b, len(alphabet))
+                    decrypted_texts[(a, b)] = decrypted_text
+                    print(f"Ключ (a={a}, b={b}): {decrypted_text[:100]}...")  # Виводимо перші 100 символів
             else:
                 print("Кандидати для ключів не знайдені.")
+
+        elif user_choice == '5':
+            if decrypted_texts:
+                for (a, b), text in decrypted_texts.items():
+                    if is_meaningful_text(text):
+                        decrypted_var4.append((a, b, text))
+                        print(f"Змістовний текст (ключ: a={a}, b={b}): {text}")
+                    else:
+                        print(f"Знайдено не змістовний текст (ключ: a={a}, b={b}).")
+
+                if decrypted_var4:
+                    with open('decrypted_var4.txt', 'w', encoding='utf-8') as f:
+                        for a, b, text in decrypted_var4:
+                            f.write(f"Ключ: a={a}, b={b}\nТекст: {text}\n\n")
+                    print("Змістовні тексти збережено у файл 'decrypted_var4.txt'.")
+            else:
+                print("Спочатку дешифруйте текст.")
+
         else:
             print("Неправильний вибір. Спробуйте знову.")
 
 if __name__ == "__main__":
-    content = load_and_clean_text('04.txt')
-    bigram_counts = count_bigrams_no_overlap(content)
+
+    ciphertext = load_and_clean_text('04.txt')
+    bigram_counts = count_bigrams_no_overlap(ciphertext)
     total_bigrams = count_total_bigrams(bigram_counts)
     bigram_freq = bigram_frequencies(bigram_counts, total_bigrams)
-    main(bigram_freq, content, [])
+    main(bigram_freq, ciphertext)
