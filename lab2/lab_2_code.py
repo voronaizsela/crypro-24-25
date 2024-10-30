@@ -48,3 +48,48 @@ class TextProcessor:
     def generate_keys(self, lengths):
         return [''.join(random.choice(self.constants.alphabet)
                 for _ in range(length)) for length in lengths]
+    
+
+class VigenereCipher:
+    def __init__(self):
+        self.constants = CryptoConstants()
+        
+    def calculate_ioc(self, text):
+        n = len(text)
+        if n <= 1:
+            return 0
+        freqs = Counter(text)
+        ioc = sum(count * (count - 1) for count in freqs.values()) / (n * (n - 1))
+        return ioc
+
+    def encrypt(self, plaintext, key):
+        encrypted_text = []
+        key_length = len(key)
+        
+        for i, char in enumerate(plaintext):
+            if char in self.constants.alphabet:
+                char_index = self.constants.alphabet.index(char)
+                key_index = self.constants.alphabet.index(key[i % key_length])
+                encrypted_text.append(self.constants.alphabet[
+                    (char_index + key_index) % len(self.constants.alphabet)
+                ])
+            else:
+                encrypted_text.append(char)
+                
+        return ''.join(encrypted_text)
+
+    def decrypt(self, ciphertext, key):
+        decrypted_text = []
+        key_length = len(key)
+        
+        for i, char in enumerate(ciphertext):
+            if char in self.constants.alphabet:
+                char_index = self.constants.alphabet.index(char)
+                key_index = self.constants.alphabet.index(key[i % key_length])
+                decrypted_text.append(self.constants.alphabet[
+                    (char_index - key_index) % len(self.constants.alphabet)
+                ])
+            else:
+                decrypted_text.append(char)
+                
+        return ''.join(decrypted_text)
