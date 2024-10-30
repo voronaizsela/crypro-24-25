@@ -93,3 +93,101 @@ class VigenereCipher:
                 decrypted_text.append(char)
                 
         return ''.join(decrypted_text)
+
+class CryptoAnalyzer:
+    def __init__(self):
+        self.constants = CryptoConstants()
+        self.cipher = VigenereCipher()
+        
+    def count_frequencies(self, text):
+        frequencies = Counter(text)
+        total = sum(frequencies.values())
+        return {char: freq / total for char, freq in frequencies.items()}
+
+    def find_key_length(self, ciphertext, max_length=30):
+        iocs = []
+        
+        for length in range(1, max_length + 1):
+            ioc_sum = 0
+            total_length = 0
+            
+            for i in range(length):
+                substring = ciphertext[i::length]
+                substring_length = len(substring)
+                ioc_sum += self.cipher.calculate_ioc(substring) * substring_length
+                total_length += substring_length
+                
+            avg_ioc = ioc_sum / total_length
+            iocs.append((length, avg_ioc))
+            
+        iocs.sort(key=lambda x: x[1], reverse=True)
+        
+        plateau = [iocs[0]]
+        for length, ioc in iocs[1:]:
+            if ioc > iocs[0][1] * 0.9:
+                plateau.append((length, ioc))
+            else:
+                break
+                
+        best_length = min(plateau, key=lambda x: x[0])
+        
+        print("\n[!] Топ-5 можливих довжин ключа [!]")
+        for length, ioc in iocs[:5]:
+            print(f" [+] Довжина {length}: IOC = {ioc:.6f}")
+        print(f"\n[✓] Рекомендована довжина ключа: {best_length[0]}")
+        
+        return best_length[0], iocs
+
+    def find_key(self, ciphertext, key_length):
+        key = ''
+        
+        for i in range(key_length):
+            column = ciphertext[i::key_length]
+            freq = self.count_frequencies(column)
+            max_correlation = -1
+            best_shift = 0
+            
+            for shift in range(len(self.constants.alphabet)):
+                correlation = 0
+                for j in range(len(self.constants.alphabet)):
+                    shifted_char = self.constants.alphabet[(j + shift) % len(self.constants.alphabet)]
+                    original_char = self.constants.alphabet[j]
+                    correlation += freq.get(shifted_char, 0) * self.constants.letter_frequencies.get(original_char, 0)
+                    
+                if correlation > max_correlation:
+                    max_correlation = correlation
+                    best_shift = shift
+                    
+            key += self.constants.alphabet[best_shift]
+            
+        return key
+
+
+class Visualizer:
+    def __init__(self):
+        self.analyzer = CryptoAnalyzer()
+        
+    def plot_ioc_comparison(self, ioc_plaintext, ioc_ciphertexts):
+        plt.figure(figsize=(12, 6))
+        data = {
+            'Текст': ['Відкритий'] + [f'Шифр. {i+1}' for i in range(len(ioc_ciphertexts))],
+            'IOC': [ioc_plaintext] + ioc_ciphertexts
+        }
+        
+        sns.barplot(x='Текст', y='IOC', data=pd.DataFrame(data))
+        plt.xlabel('Тексти')
+        plt.ylabel('Індекс відповідності')
+        plt.title('Порівняння індексів відповідності')
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.show()
+
+    def plot_frequency_distribution(self, text):
+        freq = self.analyzer.count_frequencies(text)
+        plt.figure(figsize=(15, 5))
+        plt.bar(freq.keys(), freq.values())
+        plt.title('Розподіл частот символів')
+        plt.xlabel('Символи')
+        plt.ylabel('Частота')
+        plt.tight_layout()
+        plt.show()
