@@ -143,32 +143,25 @@ class CryptoAnalyzer:
     def find_key(self, ciphertext, key_length):
         key = ''
         
-        for pos in range(key_length):
-            column = ciphertext[pos::key_length]
-            column_freqs = self.count_frequencies(column)
+        for i in range(key_length):
+            column = ciphertext[i::key_length]
+            freq = self.count_frequencies(column)
+            max_correlation = -1
+            best_shift = 0
             
-            sorted_column_chars = sorted(
-                column_freqs.items(), 
-                key=lambda x: x[1], 
-                reverse=True
-            )
+            for shift in range(len(self.constants.alphabet)):
+                correlation = 0
+                for j in range(len(self.constants.alphabet)):
+                    shifted_char = self.constants.alphabet[(j + shift) % len(self.constants.alphabet)]
+                    original_char = self.constants.alphabet[j]
+                    correlation += freq.get(shifted_char, 0) * self.constants.letter_frequencies.get(original_char, 0)
+                    
+                if correlation > max_correlation:
+                    max_correlation = correlation
+                    best_shift = shift
+                    
+            key += self.constants.alphabet[best_shift]
             
-            most_common_in_language = sorted(
-                self.constants.letter_frequencies.items(),
-                key=lambda x: x[1],
-                reverse=True
-            )
-            
-            encrypted_char = sorted_column_chars[0][0]
-            expected_char = most_common_in_language[0][0]
-            
-            shift = (
-                self.constants.alphabet.index(encrypted_char) - 
-                self.constants.alphabet.index(expected_char)
-            ) % len(self.constants.alphabet)
-            
-            key += self.constants.alphabet[shift]
-        
         return key
 
 class Visualizer:
