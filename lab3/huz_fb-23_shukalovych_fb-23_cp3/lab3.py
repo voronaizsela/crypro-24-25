@@ -52,16 +52,19 @@ def keys_find(cipher_bigrams, plain_bigrams):
     keys = []
     for i in range(len(cipher_bigrams) - 1):
         for j in range(i + 1, len(cipher_bigrams)):
-            y1 = cipher_bigrams[i]
-            y2 = cipher_bigrams[j]
-            x1 = plain_bigrams[i]
-            x2 = plain_bigrams[j]
-            diff_y = (y1 - y2) % (m ** 2)
-            diff_x = (x1 - x2) % (m ** 2)
-            a_candidates = solve_linear_congruence(diff_x, diff_y, m ** 2)
-            for a in a_candidates:
-                b = (y1 - a * x1) % (m ** 2)
-                keys.append((a, b))
+            for k in range(len(cipher_bigrams) - 1):
+                for l in range(k + 1, len(cipher_bigrams)):
+                    y1 = cipher_bigrams[i]
+                    y2 = cipher_bigrams[j]
+                    x1 = plain_bigrams[k]
+                    x2 = plain_bigrams[l]
+                    diff_y = (y1 - y2) % (m ** 2)
+                    diff_x = (x1 - x2) % (m ** 2)
+                    a_candidates = solve_linear_congruence(diff_x, diff_y, m ** 2)
+                    print(a_candidates)
+                    for a in a_candidates:
+                        b = (y1 - a * x1) % (m ** 2)
+                        keys.append((a, b))
     return keys
 
 
