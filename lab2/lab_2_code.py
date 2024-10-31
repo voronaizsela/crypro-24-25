@@ -2,6 +2,8 @@ import random
 import pandas as pd
 import seaborn as sns
 from collections import Counter
+from math import gcd
+from functools import reduce
 import matplotlib.pyplot as plt
 
 class CryptoConstants:
@@ -161,7 +163,68 @@ class CryptoAnalyzer:
             key += self.constants.alphabet[best_shift]
             
         return key
-
+    
+    def calculate_coincidence_stats(self, ciphertext, max_length=30):
+        coincidence_stats = []
+        text_length = len(ciphertext)
+        
+        # Dr для різних довжин r
+        for r in range(1, max_length + 1):
+            coincidences = 0
+            comparisons = 0
+            
+            # рахуємо співпадіння для зсуву r
+            for i in range(text_length - r):
+                if ciphertext[i] == ciphertext[i + r]:
+                    coincidences += 1
+                comparisons += 1
+            
+            dr = coincidences / comparisons if comparisons > 0 else 0
+            coincidence_stats.append((r, dr))
+        
+        # знаходимо піки в статистиці
+        peaks = []
+        for i in range(1, len(coincidence_stats) - 1):
+            if (coincidence_stats[i][1] > coincidence_stats[i-1][1] and 
+                coincidence_stats[i][1] > coincidence_stats[i+1][1]):
+                peaks.append(coincidence_stats[i])
+        
+        peaks.sort(key=lambda x: x[1], reverse=True)
+        
+        print("\n[!] Аналіз статистики співпадінь Dr [!]")
+        print("Топ-5 піків статистики Dr:")
+        for length, dr in peaks[:5]:
+            print(f" [+] Довжина {length}: Dr = {dr:.6f}")
+            
+        if peaks:
+            possible_lengths = [length for length, _ in peaks[:3]]
+            recommended_length = self._find_common_divisors(possible_lengths)
+            print(f"\n[✓] Рекомендована довжина ключа (за Dr): {recommended_length}")
+        else:
+            recommended_length = coincidence_stats[0][0]
+            
+        return recommended_length, coincidence_stats, peaks
+    
+    def _find_common_divisors(self, numbers):
+        def lcm(a, b):
+            return abs(a * b) // gcd(a, b)
+        
+        def factorize(n):
+            factors = []
+            for i in range(1, n + 1):
+                if n % i == 0:
+                    factors.append(i)
+            return factors
+        
+        # знаходимо НСК чисел
+        lcm_value = reduce(lcm, numbers)
+        
+        # знаходимо всі дільники НСК
+        factors = factorize(lcm_value)
+        max_length = min(numbers)
+        valid_factors = [f for f in factors if f <= max_length]
+        
+        return max(valid_factors) if valid_factors else min(numbers)
 
 class Visualizer:
     def __init__(self):
@@ -189,5 +252,16 @@ class Visualizer:
         plt.title('Розподіл частот символів')
         plt.xlabel('Символи')
         plt.ylabel('Частота')
+        plt.tight_layout()
+        plt.show()
+
+    def visualize_dr_stats(self, coincidence_stats):      
+        lengths, stats = zip(*coincidence_stats)
+        plt.figure(figsize=(12, 6))
+        plt.plot(lengths, stats, 'b-', marker='o')
+        plt.grid(True)
+        plt.xlabel('Довжина r')
+        plt.ylabel('Значення Dr')
+        plt.title('Статистика співпадінь символів (Dr)')
         plt.tight_layout()
         plt.show()
