@@ -140,22 +140,34 @@ class CryptoAnalyzer:
         
         return best_length[0], iocs
 
+
     def find_key(self, ciphertext, key_length):
         key = ''
         
-        for i in range(key_length):
-            column = ciphertext[i::key_length]
-            freq = self.count_frequencies(column)
+        # проходимо по кожній колонці по довжині ключа
+        for i in range(key_length): 
+        
+            column = ciphertext[i::key_length] # кожен key_length-ий символ
+
+            freq = self.count_frequencies(column) # счітаєм частоти символів у колонці
+            
             max_correlation = -1
             best_shift = 0
             
+            # чекаєм всі можливі зсуви для алфавіту
+            # лля кожного можливого зсуву (від 0 до лен алфавіта) чекаєм, наскільки добре цей зсув підходить.
             for shift in range(len(self.constants.alphabet)):
                 correlation = 0
+                
+                # рахуємо кореляцію для кожного символу алфавіту (чим > тим краще і тим вирігдніший той зсув, шо ми найшли)
                 for j in range(len(self.constants.alphabet)):
                     shifted_char = self.constants.alphabet[(j + shift) % len(self.constants.alphabet)]
                     original_char = self.constants.alphabet[j]
+                    
+                    # кореляція між частотою символу та частотою в алфавіті
                     correlation += freq.get(shifted_char, 0) * self.constants.letter_frequencies.get(original_char, 0)
                     
+                # оновлюємо максимальне кореляційне значення та найкращий зсув, якщо потрібно
                 if correlation > max_correlation:
                     max_correlation = correlation
                     best_shift = shift
@@ -163,6 +175,7 @@ class CryptoAnalyzer:
             key += self.constants.alphabet[best_shift]
             
         return key
+
 
 class Visualizer:
     def __init__(self):
